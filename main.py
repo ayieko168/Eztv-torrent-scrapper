@@ -2,19 +2,20 @@ import urllib.request
 from bs4 import BeautifulSoup
 import json
 from ast import literal_eval
+import operator
 
 
-def main():
+def main(movieTitle):
+    """create a json file containing the torrents result of 'movieTitle' """
 
     movie_result_dictionary = {}
-    movie = "peaky blinders"
+    movie = str(movieTitle)
     url = "https://eztv.io/search/{}".format(movie)
     count = 0
 
     hdr = {"User-Agent": "Mozila/5.0"}
     req = urllib.request.Request(url, headers=hdr)
     page = urllib.request.urlopen(req)
-
     soup = BeautifulSoup(page, "html.parser")
 
     # returns a list of all the <tr> tags under class forum_header_border
@@ -22,11 +23,9 @@ def main():
 
     for tr_elements in tr_tags:
 
+        print(count)
+
         tb_tags = tr_elements.find_all("td")
-
-        for tb_elements in tb_tags:
-
-            print(tb_elements, "\n")
 
         title = tb_tags[1].find("a").get("title")
         try:
@@ -41,16 +40,37 @@ def main():
         releaseDate = tb_tags[4].text
         seeds = tb_tags[5].text
 
-        # print(torrent2)
+        try:
+            len_title = len(movieTitle.split(" "))
+            x = title.split(" ")[len_title:]
+            Se, Ep = x[0].replace("S", "").split("E")
+        except ValueError:
+            pass
 
-        movie_result_dictionary[count] = [title, torrent1, torrent2, size, releaseDate, seeds]
+        # print(torrent2)
+        movie_result_dictionary[count] = [movieTitle.title(), title, torrent1, torrent2, size, releaseDate, seeds, Se, Ep]
+
+        count+=1
 
         with open("result.json", "w") as resultFo:
             json.dump(movie_result_dictionary, resultFo, indent=2)
-        
-        count+=1
+
+    print("Done\n")
+
+
+def sortBy(what):
+    """sort 'object' by 'what'"""
+
+    with open("result.json", "r") as fo:
+        resultDictionary = json.load(fo)
+
+        dic = resultDictionary
+        sorted_x = sorted(dic.items(), key=operator.itemgetter(1))
+
+        print(sorted_x)
 
 
 
 
-main()
+# main("game of thrones")
+sortBy("size")
