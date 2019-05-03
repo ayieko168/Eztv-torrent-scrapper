@@ -7,6 +7,8 @@ import operator
 
 def main(movieTitle):
     """create a json file containing the torrents result of 'movieTitle' """
+    with open("ref_.json", "r")as f0:
+        refDict = json.load(f0)
 
     movie_result_dictionary = {}
     movie = str(movieTitle)
@@ -41,13 +43,11 @@ def main(movieTitle):
         seeds = tb_tags[5].text
 
         try:
-            len_title = len(movieTitle.split(" "))
-            x = title.split(" ")[len_title:]
-            Se, Ep = x[0].replace("S", "").split("E")
-        except ValueError:
+            x = [se for se in title.split(" ") if se.startswith("S") and se.index("E") == 3][0]
+            Se, Ep = x.replace("S", "").split("E")
+        except:
             pass
 
-        # print(torrent2)
         movie_result_dictionary[count] = [movieTitle.title(), title, torrent1, torrent2, size, releaseDate, seeds, Se, Ep]
 
         count += 1
@@ -60,6 +60,7 @@ def main(movieTitle):
 
 def search_for(Se=4, Ep=3):
     """search for the season and episode in the results json"""
+    dic = {}
 
     Se = "{:02}".format(Se)
     Ep = "{:02}".format(Ep)
@@ -70,12 +71,19 @@ def search_for(Se=4, Ep=3):
     x = 0
     for k in resultDictionary.values():
         if (k[-2] == Se) and (k[-1] == Ep):
-            print(k)  # print the result, returns a list of values
-            print("\n")
+            # print("title:{}\nsize:{}\nseeders:{}\ntorrent_link:{}\n".format(k[1], k[4], k[6], k[3]))  # print the result, returns a list of values
+            # print("\n")
             x += 1
+            # sort by k[value]
+            dic[k[6]] = [k[1], k[4], k[6], k[3]]
 
+    # return a sorted list sorted by the index of the desired value ie 4=size"
+    for k2, v in sorted(dic.items()):
+        # print(v)
+        print("title:{}\nsize:{}\nseeders:{}\ntorrent_link:{}\n".format(v[0], v[1], v[2], v[3]))
+        print("\n")
     print(x, " torrents found")
 
 
-# main("peaky blinders")
-search_for(3, 6)
+# main(r"dynasty")
+search_for(2, 13)
