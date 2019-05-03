@@ -29,11 +29,11 @@ def main(movieTitle):
 
         title = tb_tags[1].find("a").get("title")
         try:
-            torrent1 = tb_tags[2].find("a", {"class": "download_1"}).get("href") # torrent file
+            torrent1 = tb_tags[2].find("a", {"class": "download_1"}).get("href")  # torrent file
         except:
             pass
         try:
-            torrent2 = tb_tags[2].find("a", {"class": "magnet"}).get("href") # torrent magnet
+            torrent2 = tb_tags[2].find("a", {"class": "magnet"}).get("href")  # torrent magnet
         except:
             pass
         size = tb_tags[3].text
@@ -50,7 +50,7 @@ def main(movieTitle):
         # print(torrent2)
         movie_result_dictionary[count] = [movieTitle.title(), title, torrent1, torrent2, size, releaseDate, seeds, Se, Ep]
 
-        count+=1
+        count += 1
 
         with open("result.json", "w") as resultFo:
             json.dump(movie_result_dictionary, resultFo, indent=2)
@@ -58,19 +58,24 @@ def main(movieTitle):
     print("Done\n")
 
 
-def sortBy(what):
-    """sort 'object' by 'what'"""
+def search_for(Se=4, Ep=3):
+    """search for the season and episode in the results json"""
 
-    with open("result.json", "r") as fo:
-        resultDictionary = json.load(fo)
+    Se = "{:02}".format(Se)
+    Ep = "{:02}".format(Ep)
 
-        dic = resultDictionary
-        sorted_x = sorted(dic.items(), key=operator.itemgetter(1))
+    with open("result.json", "r") as jsonFo:
+        resultDictionary = json.load(jsonFo)
 
-        print(sorted_x)
+    x = 0
+    for k in resultDictionary.values():
+        if (k[-2] == Se) and (k[-1] == Ep):
+            print(k)  # print the result, returns a list of values
+            print("\n")
+            x += 1
+
+    print(x, " torrents found")
 
 
-
-
-# main("game of thrones")
-sortBy("size")
+# main("peaky blinders")
+search_for(3, 6)
