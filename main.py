@@ -6,7 +6,7 @@ import operator
 
 
 def main(movieTitle):
-    """create a json file containing the torrents result of 'movieTitle' """
+    """create a json file containing the EZYV torrents result of 'movieTitle' """
     with open("ref_.json", "r")as f0:
         refDict = json.load(f0)
 
@@ -33,11 +33,11 @@ def main(movieTitle):
         try:
             torrent1 = tb_tags[2].find("a", {"class": "download_1"}).get("href")  # torrent file
         except:
-            pass
+            torrent1 = None
         try:
             torrent2 = tb_tags[2].find("a", {"class": "magnet"}).get("href")  # torrent magnet
         except:
-            pass
+            torrent2 = None
         size = tb_tags[3].text
         releaseDate = tb_tags[4].text
         seeds = tb_tags[5].text
@@ -46,7 +46,7 @@ def main(movieTitle):
             x = [se for se in title.split(" ") if se.startswith("S") and se.index("E") == 3][0]
             Se, Ep = x.replace("S", "").split("E")
         except:
-            pass
+            Se, Ep = None, None
 
         movie_result_dictionary[count] = [movieTitle.title(), title, torrent1, torrent2, size, releaseDate, seeds, Se, Ep]
 
@@ -58,12 +58,13 @@ def main(movieTitle):
     print("Done\n")
 
 
-def search_for(Se=4, Ep=3):
+def search_for(Se=1, Ep=1):
     """search for the season and episode in the results json"""
     dic = {}
 
     Se = "{:02}".format(Se)
     Ep = "{:02}".format(Ep)
+
 
     with open("result.json", "r") as jsonFo:
         resultDictionary = json.load(jsonFo)
@@ -71,11 +72,12 @@ def search_for(Se=4, Ep=3):
     x = 0
     for k in resultDictionary.values():
         if (k[-2] == Se) and (k[-1] == Ep):
+            # print(k)
             # print("title:{}\nsize:{}\nseeders:{}\ntorrent_link:{}\n".format(k[1], k[4], k[6], k[3]))  # print the result, returns a list of values
-            # print("\n")
+            print("\n")
             x += 1
             # sort by k[value]
-            dic[k[6]] = [k[1], k[4], k[6], k[3]]
+            dic[k[4]] = [k[1], k[4], k[6], k[3]]
 
     # return a sorted list sorted by the index of the desired value ie 4=size"
     for k2, v in sorted(dic.items()):
@@ -85,5 +87,5 @@ def search_for(Se=4, Ep=3):
     print(x, " torrents found")
 
 
-# main(r"dynasty")
-search_for(2, 13)
+##main(r"The Good Doctor")
+search_for(3, 6)
