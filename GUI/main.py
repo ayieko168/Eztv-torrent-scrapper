@@ -3,9 +3,10 @@ from bs4 import BeautifulSoup
 import json
 from ast import literal_eval
 import operator, webbrowser
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
 from MainDesign import *
+from ast import literal_eval
 
 
 class App(QMainWindow):
@@ -22,10 +23,10 @@ class App(QMainWindow):
         
         ## SETUP TABLE
         header = self.ui.resutlTable.horizontalHeader()
-        header.setResizeMode(0, QtGui.QHeaderView.ResizeToContents)
-        header.setResizeMode(1, QtGui.QHeaderView.Stretch)
-        header.setResizeMode(2, QtGui.QHeaderView.Stretch)
-        header.setResizeMode(3, QtGui.QHeaderView.Stretch)
+        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.Stretch)
+        header.setSectionResizeMode(2, QHeaderView.Stretch)
+        header.setSectionResizeMode(3, QHeaderView.Stretch)
 
         self.ui.resutlTable.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.ui.resutlTable.customContextMenuRequested.connect(self.on_customContextMenuRequested)
@@ -65,7 +66,7 @@ class App(QMainWindow):
         
         pos = 0
         for value in values:
-            table.setItem(rowPosition, pos, QtGui.QTableWidgetItem(str(value)))
+            table.setItem(rowPosition, pos, QTableWidgetItem(str(value)))
             pos+=1
 
     def searchCMD(self):
@@ -183,7 +184,13 @@ def downloadDataFor(movieTitle):
         seeds = tb_tags[5].text
 
         try:
-            x = [se for se in title.split(" ") if se.startswith("S") and se.index("E") == 3][0]
+            for se in title.split(" "):
+                try:
+                    if (se.startswith("S")) and (se.index("E") == 3) and (type(literal_eval(se[2]))):
+                        x = se
+                except:
+                    pass
+
             Se, Ep = x.replace("S", "").split("E")
         except:
             Se, Ep = None, None
