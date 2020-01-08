@@ -31,6 +31,14 @@ class App(QMainWindow):
         self.ui.resutlTable.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.ui.resutlTable.customContextMenuRequested.connect(self.on_customContextMenuRequested)
 
+        try:
+            with open("result.json") as titlesOb:
+                currentTitle = json.load(titlesOb)["0"][0]
+                self.ui.dataNameLabel.setText(currentTitle)
+        except:
+            self.ui.dataNameLabel.setText(None)
+
+
 
     def getTitles(self):
 
@@ -47,7 +55,6 @@ class App(QMainWindow):
 
         if (self.ui.enterCheck.isChecked()) and (self.ui.titleEdit.text() != ""):
             title = self.ui.titleEdit.text()
-        
         elif (self.ui.chooseCheck.isChecked()) and (self.ui.titleCombo.currentText() != "Select A Title..."):
             title = self.ui.titleCombo.currentText()
         else:
@@ -55,7 +62,9 @@ class App(QMainWindow):
             print("Good Bye.")
             return
 
-        downloadDataFor(title)
+        ret = downloadDataFor(title)
+        if ret:
+            self.ui.dataNameLabel.setText(title)
 
     def displayResultOnTable(self, values):
 
@@ -203,6 +212,7 @@ def downloadDataFor(movieTitle):
             json.dump(movie_result_dictionary, resultFo, indent=2)
 
     print("Done\n")
+    return 1
 
 def search_for(Se=1, Ep=1, sortValue=4):
     """search for the season and episode in the results json
