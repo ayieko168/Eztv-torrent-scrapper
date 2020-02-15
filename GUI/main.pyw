@@ -7,6 +7,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from MainDesign import *
 from ast import literal_eval
+import threading
 
 
 class App(QMainWindow):
@@ -20,6 +21,7 @@ class App(QMainWindow):
         self.ui.titleCombo.addItems(self.getTitles())
         self.ui.getDataButton.clicked.connect(self.getDataCMD)
         self.ui.searchButton.clicked.connect(self.searchCMD)
+        self.ui.moreInfoButton.clicked.connect(self.showMoreInfo)
         
         ## SETUP TABLE
         header = self.ui.resutlTable.horizontalHeader()
@@ -31,6 +33,7 @@ class App(QMainWindow):
         self.ui.resutlTable.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.ui.resutlTable.customContextMenuRequested.connect(self.on_customContextMenuRequested)
 
+        ## get the current database title and set the "dataNameLable"
         try:
             with open("result.json") as titlesOb:
                 currentTitle = json.load(titlesOb)["0"][0]
@@ -38,9 +41,8 @@ class App(QMainWindow):
         except:
             self.ui.dataNameLabel.setText(None)
 
-
-
     def getTitles(self):
+        """get the titles available from the 'titles' database"""
 
         with open("EZTV_titles.json") as titlesOb:
             data = json.load(titlesOb)
@@ -50,6 +52,7 @@ class App(QMainWindow):
         return titlesList
 
     def getDataCMD(self):
+        """"""
 
         title = ""
 
@@ -58,14 +61,23 @@ class App(QMainWindow):
         elif (self.ui.chooseCheck.isChecked()) and (self.ui.titleCombo.currentText() != "Select A Title..."):
             title = self.ui.titleCombo.currentText()
         else:
-            print("ERROR WITH THE SEARCH TITLE")
-            print("Good Bye.")
+            self.ui.statusBar.showMessage("ERROR WITH THE SEARCH TITLE....Good Bye.", 2000)
             return
 
+
+        
+        # self.ui.statusBar.showMessage("Starting the download... Please wait...")
+        
         ret = downloadDataFor(title)
+
         if ret:
             self.ui.dataNameLabel.setText(title)
-
+            QMessageBox.information(self, "Information!", f"Succsessfully downloaded database on \"{title.title()}\"")
+            self.ui.statusBar.showMessage("Done.", 2000)
+        elif ret == 402:
+            QMessageBox.critical(self, "ERROR", "PLEASE CHECK YOUR INTERNET CONNECTION")
+            self.ui.statusBar.showMessage(f"Error.. exit code >> {ret}", 2000)
+  
     def displayResultOnTable(self, values):
 
         table = self.ui.resutlTable
@@ -148,7 +160,52 @@ class App(QMainWindow):
             magnet_link = itemData[3]
 
             webbrowser.open_new(magnet_link)
-            
+
+    def showMoreInfo(self):
+
+        print("show more info")
+
+        with open("result.json", "r") as resultsFo:
+           resultsDict = json.load(resultsFo)
+           current_title = resultsDict["0"][0].lower().replace(" ", "-")
+        
+        with open("ref_.json", "r") as refFo:
+           referenceDict = json.load(refFo)
+           lis = referenceDict[current_title]
+           title = current_title
+           title_ID = lis[1]
+
+        url = f"https://eztv.io/shows/{title_ID}/{title}/"
+        image_url = f"https://eztv.io/ezimg/thumbs/{title}-{title_ID}.jpg"
+        print(title_ID, title)
+
+        webbrowser.open_new(url)
+    
+    def downloadAdditionalInfo(self, url):
+
+        info_dictionary = {}
+
+        try:
+            hdr = {"User-Agent": "Mozila/5.0"}
+            req = urllib.request.Request(url, headers=hdr)
+            page = urllib.request.urlopen(req)
+            soup = BeautifulSoup(page, "html.parser")
+        except Exception as e:
+            # print(e.args)
+            # print("CHECK YOUR INTERNET CONNECTION")
+            return 402
+        
+        td_element = soup.find("td", {"class": "show_info_banner_logo"})
+        description = td_element.find("span").text
+
+        table_element = soup.findChildren("table", {"class": "section_thread_post show_info_description"})
+        # x = table_element.text
+        
+        with open ("the_data.md", "w")as fff:
+            fff.write(str(table_element))
+
+
+
 
 def downloadDataFor(movieTitle):
     """create a json file containing the EZYV torrents result of 'movieTitle' """
@@ -166,16 +223,16 @@ def downloadDataFor(movieTitle):
         page = urllib.request.urlopen(req)
         soup = BeautifulSoup(page, "html.parser")
     except Exception as e:
-        print(e.args)
-        print("CHECK YOUR INTERNET CONNECTION")
-        return
+        # print(e.args)
+        # print("CHECK YOUR INTERNET CONNECTION")
+        return 402
 
     # returns a list of all the <tr> tags under class forum_header_border
     tr_tags = soup.find_all("tr", {"class": "forum_header_border", "name": "hover"})
 
     for tr_elements in tr_tags:
 
-        print(count)
+        # print(count)
 
         tb_tags = tr_elements.find_all("td")
 
@@ -211,7 +268,7 @@ def downloadDataFor(movieTitle):
         with open("result.json", "w") as resultFo:
             json.dump(movie_result_dictionary, resultFo, indent=2)
 
-    print("Done\n")
+    # print("Done\n")
     return 1
 
 def search_for(Se=1, Ep=1, sortValue=4):
@@ -247,6 +304,7 @@ def search_for(Se=1, Ep=1, sortValue=4):
     # print(x, " torrents found")
 
     return resulstDict
+
 
 
 
