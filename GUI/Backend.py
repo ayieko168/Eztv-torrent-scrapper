@@ -3,9 +3,9 @@ from bs4 import BeautifulSoup
 import json
 from ast import literal_eval
 import operator, webbrowser
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-from MainDesign import *
+from PyQt5.QtCore import QPoint, pyqtSlot
+from PyQt5.QtWidgets import QMainWindow, QHeaderView, QMessageBox, QTableWidgetItem, QApplication, QMenu
+from utils.design_files.MainDesign import *
 
 
 
@@ -43,7 +43,7 @@ class App(QMainWindow):
     def getTitles(self):
         """get the titles available from the 'titles' database"""
 
-        with open("utils\\resources\\EZTV_RFERENCE_DICTIONARY.json") as titlesOb:
+        with open("utils/resources/EZTV_RFERENCE_DICTIONARY.json") as titlesOb:
             data = json.load(titlesOb)
             titles = [k.replace("-", " ").title() for k,v in data.items()]
             titles.insert(0, "Select A Title...")
@@ -69,7 +69,7 @@ class App(QMainWindow):
 
         if ret:
             self.ui.dataNameLabel.setText(title)
-            QMessageBox.information(self, "Information!", f"Succsessfully downloaded database on \"{title.title()}\"")
+            QMessageBox.information(self, "Information!", f"Succsessfully downloaded database on \"{title.title()}\"\nThank Antony Later! #1960")
             self.ui.statusBar.showMessage("Done.", 2000)
         elif ret == 402:
             QMessageBox.critical(self, "ERROR", "PLEASE CHECK YOUR INTERNET CONNECTION")
