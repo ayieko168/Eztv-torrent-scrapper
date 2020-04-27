@@ -50,6 +50,9 @@
          <property name="text">
           <string>Enter Manualy</string>
          </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
         </widget>
        </item>
        <item>
@@ -161,6 +164,12 @@
      </item>
      <item>
       <widget class="QPushButton" name="getDataButton">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>26</height>
+        </size>
+       </property>
        <property name="font">
         <font>
          <pointsize>10</pointsize>
@@ -221,6 +230,9 @@
       <property name="sortingEnabled">
        <bool>true</bool>
       </property>
+      <attribute name="horizontalHeaderMinimumSectionSize">
+       <number>100</number>
+      </attribute>
       <column>
        <property name="text">
         <string>Name</string>
@@ -395,12 +407,18 @@
        <x>10</x>
        <y>20</y>
        <width>871</width>
-       <height>25</height>
+       <height>29</height>
       </rect>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_3">
       <item>
        <widget class="QLabel" name="label_5">
+        <property name="minimumSize">
+         <size>
+          <width>120</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="maximumSize">
          <size>
           <width>110</width>
@@ -419,6 +437,12 @@
       </item>
       <item>
        <widget class="QLabel" name="dataNameLabel">
+        <property name="minimumSize">
+         <size>
+          <width>500</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="font">
          <font>
           <family>Georgia</family>
@@ -440,7 +464,7 @@
        <widget class="QPushButton" name="moreInfoButton">
         <property name="maximumSize">
          <size>
-          <width>60</width>
+          <width>105</width>
           <height>16777215</height>
          </size>
         </property>
@@ -464,12 +488,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>82</x>
-     <y>35</y>
+     <x>102</x>
+     <y>55</y>
     </hint>
     <hint type="destinationlabel">
-     <x>165</x>
-     <y>62</y>
+     <x>183</x>
+     <y>93</y>
     </hint>
    </hints>
   </connection>
@@ -484,8 +508,24 @@
      <y>37</y>
     </hint>
     <hint type="destinationlabel">
-     <x>543</x>
-     <y>61</y>
+     <x>896</x>
+     <y>93</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>chooseCheck</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>titleEdit</receiver>
+   <slot>setDisabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>516</x>
+     <y>45</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>376</x>
+     <y>80</y>
     </hint>
    </hints>
   </connection>

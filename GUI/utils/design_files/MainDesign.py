@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'C:/Users/ayieko/Projects And  Research/PycharmProjects/Eztv-torrent-scrapper/GUI/utils/design_files/MainDesign.ui'
+# Form implementation generated from reading ui file '/ayieko/Projects And Research/Python Projects/Eztv-torrent-scrapper/GUI/utils/design_files/MainDesign.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.1
+# Created by: PyQt5 UI code generator 5.14.2
 #
 # WARNING! All changes made in this file will be lost!
+
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -14,7 +15,7 @@ class Ui_MainWindow(object):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(914, 578)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("../imgs/logo.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap("/ayieko/Projects And Research/Python Projects/Eztv-torrent-scrapper/GUI/utils/design_files/../imgs/logo.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         MainWindow.setWindowIcon(icon)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -32,6 +33,7 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.enterCheck.sizePolicy().hasHeightForWidth())
         self.enterCheck.setSizePolicy(sizePolicy)
         self.enterCheck.setMinimumSize(QtCore.QSize(361, 20))
+        self.enterCheck.setChecked(True)
         self.enterCheck.setObjectName("enterCheck")
         self.horizontalLayout.addWidget(self.enterCheck)
         spacerItem = QtWidgets.QSpacerItem(55, 20, QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Minimum)
@@ -78,6 +80,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addWidget(self.titleCombo)
         self.verticalLayout.addLayout(self.horizontalLayout_2)
         self.getDataButton = QtWidgets.QPushButton(self.groupBox)
+        self.getDataButton.setMinimumSize(QtCore.QSize(0, 26))
         font = QtGui.QFont()
         font.setPointSize(10)
         self.getDataButton.setFont(font)
@@ -104,6 +107,7 @@ class Ui_MainWindow(object):
         self.resutlTable.setHorizontalHeaderItem(2, item)
         item = QtWidgets.QTableWidgetItem()
         self.resutlTable.setHorizontalHeaderItem(3, item)
+        self.resutlTable.horizontalHeader().setMinimumSectionSize(100)
         self.groupBox_4 = QtWidgets.QGroupBox(self.groupBox_2)
         self.groupBox_4.setGeometry(QtCore.QRect(10, 47, 871, 51))
         self.groupBox_4.setObjectName("groupBox_4")
@@ -145,12 +149,13 @@ class Ui_MainWindow(object):
         self.label_4.setFont(font)
         self.label_4.setObjectName("label_4")
         self.layoutWidget = QtWidgets.QWidget(self.groupBox_2)
-        self.layoutWidget.setGeometry(QtCore.QRect(10, 20, 871, 25))
+        self.layoutWidget.setGeometry(QtCore.QRect(10, 20, 871, 29))
         self.layoutWidget.setObjectName("layoutWidget")
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout(self.layoutWidget)
         self.horizontalLayout_3.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.label_5 = QtWidgets.QLabel(self.layoutWidget)
+        self.label_5.setMinimumSize(QtCore.QSize(120, 0))
         self.label_5.setMaximumSize(QtCore.QSize(110, 16777215))
         font = QtGui.QFont()
         font.setPointSize(10)
@@ -158,6 +163,7 @@ class Ui_MainWindow(object):
         self.label_5.setObjectName("label_5")
         self.horizontalLayout_3.addWidget(self.label_5)
         self.dataNameLabel = QtWidgets.QLabel(self.layoutWidget)
+        self.dataNameLabel.setMinimumSize(QtCore.QSize(500, 0))
         font = QtGui.QFont()
         font.setFamily("Georgia")
         font.setPointSize(11)
@@ -170,7 +176,7 @@ class Ui_MainWindow(object):
         self.dataNameLabel.setObjectName("dataNameLabel")
         self.horizontalLayout_3.addWidget(self.dataNameLabel)
         self.moreInfoButton = QtWidgets.QPushButton(self.layoutWidget)
-        self.moreInfoButton.setMaximumSize(QtCore.QSize(60, 16777215))
+        self.moreInfoButton.setMaximumSize(QtCore.QSize(105, 16777215))
         self.moreInfoButton.setObjectName("moreInfoButton")
         self.horizontalLayout_3.addWidget(self.moreInfoButton)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -181,6 +187,7 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
         self.enterCheck.toggled['bool'].connect(self.titleEdit.setEnabled)
         self.chooseCheck.toggled['bool'].connect(self.titleCombo.setEnabled)
+        self.chooseCheck.toggled['bool'].connect(self.titleEdit.setDisabled)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -218,5 +225,3 @@ class Ui_MainWindow(object):
         self.label_4.setText(_translate("MainWindow", "Sort By: "))
         self.label_5.setText(_translate("MainWindow", "Current database: "))
         self.moreInfoButton.setText(_translate("MainWindow", "More Info."))
-
-

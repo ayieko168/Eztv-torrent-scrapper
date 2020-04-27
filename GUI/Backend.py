@@ -2,11 +2,26 @@ import urllib.request
 from bs4 import BeautifulSoup
 import json
 from ast import literal_eval
+import sys, time
 import operator, webbrowser
 from PyQt5.QtCore import QPoint, pyqtSlot
 from PyQt5.QtWidgets import QMainWindow, QHeaderView, QMessageBox, QTableWidgetItem, QApplication, QMenu
+from PyQt5 import QtGui, QtCore
 from utils.design_files.MainDesign import *
+from utils.torrent_scrapers import eztv_scraper
+from collections import OrderedDict
 
+## Plartform Spesific Variables
+if (sys.platform == "win32") or (sys.platform == "cygwin"):
+    resultPath = "utils\\resources\\result.json"
+    EZTV_RFERENCE_DICTIONARYPath = "utils\\resources\\EZTV_RFERENCE_DICTIONARY.json"
+    ref_Path = "utils\\resources\\ref_.json"
+elif sys.platform == "linux":
+    print("plartform is linux")
+    resultPath = "./utils/resources/result.json"
+    EZTV_RFERENCE_DICTIONARYPath = "./utils/resources/EZTV_RFERENCE_DICTIONARY.json"
+    # ref_Path = "./utils/resources/ref_.json"
+    ref_Path = "utils/resources/EZTV_RFERENCE_DICTIONARY.json"
 
 
 class App(QMainWindow):
@@ -25,16 +40,19 @@ class App(QMainWindow):
         ## SETUP TABLE
         header = self.ui.resutlTable.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.Stretch)
-        header.setSectionResizeMode(2, QHeaderView.Stretch)
-        header.setSectionResizeMode(3, QHeaderView.Stretch)
-
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        # header.setSectionResizeMode(3, QHeaderView.Stretch)
         self.ui.resutlTable.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.ui.resutlTable.customContextMenuRequested.connect(self.on_customContextMenuRequested)
 
         ## get the current database title and set the "dataNameLable"
+        self.get_current_db_title()
+
+    def get_current_db_title(self):
+
         try:
-            with open("utils\\resources\\result.json") as titlesOb:
+            with open(resultPath) as titlesOb:
                 currentTitle = json.load(titlesOb)["0"][0]
                 self.ui.dataNameLabel.setText(currentTitle)
         except:
@@ -43,7 +61,7 @@ class App(QMainWindow):
     def getTitles(self):
         """get the titles available from the 'titles' database"""
 
-        with open("utils\\resources\\EZTV_RFERENCE_DICTIONARY.json") as titlesOb:
+        with open(EZTV_RFERENCE_DICTIONARYPath) as titlesOb:
             data = json.load(titlesOb)
             titles = [k.replace("-", " ").title() for k,v in data.items()]
             titles.insert(0, "Select A Title...")
@@ -51,10 +69,14 @@ class App(QMainWindow):
         return titles
 
     def getDataCMD(self):
-        """command that downloads the TITLE's data ie call the download data for method"""
+        """command that downloads the <title> torrnt info and writed it to a json file as a search reference"""
+
+        with open(ref_Path, "r") as refernce_Fo:
+            reference_dict = json.load(refernce_Fo)
 
         title = ""
 
+        ## Check if there is any selected input method and input text
         if (self.ui.enterCheck.isChecked()) and (self.ui.titleEdit.text() != ""):
             title = self.ui.titleEdit.text()
         elif (self.ui.chooseCheck.isChecked()) and (self.ui.titleCombo.currentText() != "Select A Title..."):
@@ -63,58 +85,74 @@ class App(QMainWindow):
             self.ui.statusBar.showMessage("ERROR WITH THE SEARCH TITLE....Good Bye.", 2000)
             return
 
+        ## Check if the search title is in the local refernce db
+        searc_title = title.lower().replace(" ", "-")
+        if searc_title in reference_dict:
+
+            search_ez_id = int(reference_dict[searc_title][1])
+            found_torrents_dict, found_torrents_count, ret_code = eztv_scraper.get_torrents(ez_id=search_ez_id)
+
+            print(found_torrents_dict)
+
+        else:
+            found_torrents_dict, found_torrents_count, ret_code = eztv_scraper.get_torrents(movie_title=searc_title)
+
+            print(found_torrents_dict)
+
         # self.ui.statusBar.showMessage("Starting the download... Please wait...")
         
-        ret = downloadDataFor(title)
 
-        if ret:
+        if ret_code == True:
             self.ui.dataNameLabel.setText(title)
+
+            with open(resultPath, "w") as results_Fo:
+                json.dump(found_torrents_dict, results_Fo, indent=2)
+
             QMessageBox.information(self, "Information!", f"Succsessfully downloaded database on \"{title.title()}\"\nThank Antony Later! #1960")
             self.ui.statusBar.showMessage("Done.", 2000)
-        elif ret == 402:
+
+        elif ret_code == False:
             QMessageBox.critical(self, "ERROR", "PLEASE CHECK YOUR INTERNET CONNECTION")
-            self.ui.statusBar.showMessage(f"Error.. exit code >> {ret}", 2000)
+            self.ui.statusBar.showMessage(f"Error.. exit code >> {ret_code}", 2000)
   
-    def displayResultOnTable(self, values):
+    def displayResultOnTable(self, torrent_dictionary):
 
         table = self.ui.resutlTable
 
         rowPosition = table.rowCount()
         table.insertRow(rowPosition)
-        
-        pos = 0
-        for value in values:
-            table.setItem(rowPosition, pos, QTableWidgetItem(str(value)))
-            pos+=1
+
+        ## Set column data
+        table.setItem(rowPosition, 0, QTableWidgetItem(str(torrent_dictionary['title'])))
+        table.setItem(rowPosition, 1, QTableWidgetItem(str(torrent_dictionary['size'])))
+        table.setItem(rowPosition, 2, QTableWidgetItem(str(torrent_dictionary['seeds'])))
+        table.setItem(rowPosition, 3, QTableWidgetItem(str(torrent_dictionary['magnet_link'])))
+
+        ## Set text alignment
+        table.item(rowPosition, 1).setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+        table.item(rowPosition, 2).setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
 
     def searchCMD(self):
 
         season = self.ui.seasonSpin.text()
         episode = self.ui.episodeSpin.text()
-        sortvalue = self.ui.sortValueCombo.currentText()
+        sort_value = self.ui.sortValueCombo.currentText().lower()
 
-        if sortvalue == "Size":
-            sv=4
-        elif sortvalue ==  "Name":
-            sv=1
-        elif sortvalue == "Seeders":
-            sv=6
-        else:
-            sv=4
-        
-        resultDict = search_for(int(season), int(episode), sortValue=sv)
+        resultDict = self.search_for(int(season), int(episode), sort_value=sort_value)
 
         # Clear all table rows and display results
         self.ui.resutlTable.setRowCount(0)
-        for title, values in resultDict.items():
-            vals = [title, *values]
-            self.displayResultOnTable(vals)
+        for found_torrent_dict in resultDict:
+            self.displayResultOnTable(found_torrent_dict[1])
 
     @pyqtSlot(QPoint)
     def on_customContextMenuRequested(self, pos):
 
         table = QApplication.focusWidget()
         tableName = table.objectName()
+
+        if self.ui.resutlTable.rowCount() <= 0:
+            return
 
         def getItemData(itemIndex):
             data = []
@@ -132,7 +170,7 @@ class App(QMainWindow):
 
         copy = menu.addAction("Copy")
         menu.addSeparator()
-        _open = menu.addAction("Open in uTorrent")
+        _open = menu.addAction("Open in Bittorren Client")
         menu.addSeparator()
         
         action = menu.exec_(QtGui.QCursor.pos())
@@ -162,11 +200,11 @@ class App(QMainWindow):
 
         print("show more info")
 
-        with open("utils\\resources\\result.json", "r") as resultsFo:
+        with open(resultPath, "r") as resultsFo:
            resultsDict = json.load(resultsFo)
            current_title = resultsDict["0"][0].lower().replace(" ", "-")
         
-        with open("utils\\resources\\ref_.json", "r") as refFo:
+        with open(ref_Path, "r") as refFo:
            referenceDict = json.load(refFo)
            lis = referenceDict[current_title]
            title = current_title
@@ -201,106 +239,104 @@ class App(QMainWindow):
         with open ("the_data.md", "w")as fff:
             fff.write(str(table_element))
 
+    def search_for(self, season=1, episode=1, sort_value='size', all=False):
+        """ search for the season and episode in the results json file
+            :returns: A List of touples with format (sort_value, torent_dictionary)
+            sort_value ==> name=Name, size=Size, seeders=Seeders"""
 
-def downloadDataFor(movieTitle):
-    """create a json file containing the EZYV torrents result of 'movieTitle' """
-    with open("utils\\resources\\ref_.json", "r")as f0:
-        refDict = json.load(f0)
+        search_dictionary = OrderedDict()
+        match_dictionary = OrderedDict()
 
-    movie_result_dictionary = {}
-    movie = str(movieTitle)
-    url = "https://eztv.io/search/{}".format(movie)
-    count = 0
+        self.search_season = "{:02}".format(season)
+        self.search_episode = "{:02}".format(episode)
+        self.sort_value = sort_value
+        self.all = all
 
-    try:
-        hdr = {"User-Agent": "Mozila/5.0"}
-        req = urllib.request.Request(url, headers=hdr)
-        page = urllib.request.urlopen(req)
-        soup = BeautifulSoup(page, "html.parser")
-    except Exception as e:
-        # print(e.args)
-        # print("CHECK YOUR INTERNET CONNECTION")
-        return 402
+        with open("./utils/resources/result.json", "r") as jsonFo:
+            search_dictionary = json.load(jsonFo)
 
-    # returns a list of all the <tr> tags under class forum_header_border
-    tr_tags = soup.find_all("tr", {"class": "forum_header_border", "name": "hover"})
+        counter = 1
+        for _, ref_value in search_dictionary.items():
 
-    for tr_elements in tr_tags:
+            ref_season = ref_value[6]
+            ref_episode = ref_value[7]
+            ref_name = ref_value[1]
+            ref_size = ref_value[4]
+            ref_seeds = ref_value[5]
+            ref_magnet_link = ref_value[3]
+            ref_torrent_link = ref_value[2]
 
-        # print(count)
+            if "MB" in ref_size:
+                mod_ref_size = float(ref_size.replace(" ", "").replace("MB", "").strip())
+            elif "GB" in ref_size:
+                mod_ref_size = float(ref_size.replace(" ", "").replace("GB", "").strip())
+                mod_ref_size = mod_ref_size * 1e3
+            else:
+                mod_ref_size = float(ref_size)
 
-        tb_tags = tr_elements.find_all("td")
+            # Search to find if the searched <season> and <episode> are in an item's value
+            if (ref_season == self.search_season) and (ref_episode == self.search_episode) and not self.all:
+                # print("returning searched")
+                "name=Name, size=Size, seeders=Seeders"
+                if self.sort_value == "size":
+                    match_dictionary[mod_ref_size + time.time()] = {"title": ref_name, "torrent_link": ref_torrent_link,
+                                                                    "magnet_link": ref_magnet_link,
+                                                                    "size": ref_size, "seeds": ref_seeds,
+                                                                    "season": ref_season, "episode": ref_episode}
+                elif self.sort_value == "name":
+                    match_dictionary[ref_name] = {"title": ref_name, "torrent_link": ref_torrent_link,
+                                                  "magnet_link": ref_magnet_link,
+                                                  "size": ref_size, "seeds": ref_seeds, "season": ref_season,
+                                                  "episode": ref_episode}
+                elif self.sort_value == "seeders":
+                    match_dictionary[float(ref_seeds) + float(time.time())] = {"title": ref_name,
+                                                                               "torrent_link": ref_torrent_link,
+                                                                               "magnet_link": ref_magnet_link,
+                                                                               "size": ref_size, "seeds": ref_seeds,
+                                                                               "season": ref_season,
+                                                                               "episode": ref_episode}
+                else:
+                    match_dictionary[mod_ref_size + time.time()] = {"title": ref_name, "torrent_link": ref_torrent_link,
+                                                                    "magnet_link": ref_magnet_link,
+                                                                    "size": ref_size, "seeds": ref_seeds,
+                                                                    "season": ref_season, "episode": ref_episode}
 
-        title = tb_tags[1].find("a").get("title")
-        try:
-            torrent1 = tb_tags[2].find("a", {"class": "download_1"}).get("href")  # torrent file
-        except:
-            torrent1 = None
-        try:
-            torrent2 = tb_tags[2].find("a", {"class": "magnet"}).get("href")  # torrent magnet
-        except:
-            torrent2 = None
-        size = tb_tags[3].text
-        releaseDate = tb_tags[4].text
-        seeds = tb_tags[5].text
+            if all:
+                # print("returning all")
+                if self.sort_value == "size":
+                    match_dictionary[mod_ref_size + time.time()] = {"title": ref_name, "torrent_link": ref_torrent_link,
+                                                                    "magnet_link": ref_magnet_link,
+                                                                    "size": ref_size, "seeds": ref_seeds,
+                                                                    "season": ref_season, "episode": ref_episode}
+                elif self.sort_value == "name":
+                    match_dictionary[ref_name] = {"title": ref_name, "torrent_link": ref_torrent_link,
+                                                  "magnet_link": ref_magnet_link,
+                                                  "size": ref_size, "seeds": ref_seeds, "season": ref_season,
+                                                  "episode": ref_episode}
+                elif self.sort_value == "seeders":
+                    match_dictionary[float(ref_seeds) + float(time.time())] = {"title": ref_name,
+                                                                               "torrent_link": ref_torrent_link,
+                                                                               "magnet_link": ref_magnet_link,
+                                                                               "size": ref_size, "seeds": ref_seeds,
+                                                                               "season": ref_season,
+                                                                               "episode": ref_episode}
+                else:
+                    match_dictionary[mod_ref_size + time.time()] = {"title": ref_name, "torrent_link": ref_torrent_link,
+                                                                    "magnet_link": ref_magnet_link,
+                                                                    "size": ref_size, "seeds": ref_seeds,
+                                                                    "season": ref_season, "episode": ref_episode}
 
-        try:
-            for se in title.split(" "):
-                try:
-                    if (se.startswith("S")) and (se.index("E") == 3) and (type(literal_eval(se[2]))):
-                        x = se
-                except:
-                    pass
+        # print(json.dumps(match_dictionary, sort_keys=True, indent=2))
 
-            Se, Ep = x.replace("S", "").split("E")
-        except:
-            Se, Ep = None, None
-
-        movie_result_dictionary[count] = [movieTitle.title(), title, torrent1, torrent2, size, releaseDate, seeds, Se, Ep]
-
-        count += 1
-
-        with open("utils\\resources\\result.json", "w") as resultFo:
-            json.dump(movie_result_dictionary, resultFo, indent=2)
-
-    # print("Done\n")
-    return 1
-
-def search_for(Se=1, Ep=1, sortValue=4):
-    """search for the season and episode in the results json
-        sortValue ==> 1=Name, 4=Size, 6=Seeders"""
-    dic = {}
-    resulstDict = {}
-
-    Se = "{:02}".format(Se)
-    Ep = "{:02}".format(Ep)
-
-
-    with open("utils\\resources\\result.json", "r") as jsonFo:
-        resultDictionary = json.load(jsonFo)
-
-    x = 0
-    for k in resultDictionary.values():
-        if (k[-2] == Se) and (k[-1] == Ep):
-            # print(k)
-            # print("title:{}\nsize:{}\nseeders:{}\ntorrent_link:{}\n".format(k[1], k[4], k[6], k[3]))  # print the result, returns a list of values
-            # print("\n")
-            x += 1
-            # sort by k[value]
-            dic[k[sortValue]] = [k[1], k[4], k[6], k[3]]
-
-    # return a sorted list sorted by the index of the desired value ie 4=size"
-    for k2, v in sorted(dic.items()):
-        # print(v)
-        resulstDict[v[0]] = (v[1], v[2], v[3])
-        # print("title:{}\nsize:{}\nseeders:{}\ntorrent_link:{}\n".format(v[0], v[1], v[2], v[3]))
-        # print("\n")
-    
-    # print(x, " torrents found")
-
-    return resulstDict
+        return sorted(match_dictionary.items())
 
 
+if __name__ == "__main__":
+
+    w = QApplication([])
+    app = App()
+    app.show()
+    w.exec_()
 
 
 

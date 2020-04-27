@@ -24,11 +24,11 @@ If you are on linux, you can help me finish up making the software plartform-ind
 For now you will have to wait till I finish it ;)
 
 # SCREENSHOTS
-Bellow shows a screenshot of the application.
-![Image Of the Main Window](/Screenshots/Frontend-Inactive.JPG)
+ Bellow shows a screenshot of the application.
+ ![GitHub Logo](/Screenshots/Frontend-Inactive.png)
 
-An Image showing the program shearch results:
-![Active Image](/Screenshots/Search-Example.JPG)
+ An Image showing the program shearch results:
+ ![Active Image](/Screenshots/Search-Example.JPG)
 
 # FUTURE ADVANCES
 In the future I want to:
