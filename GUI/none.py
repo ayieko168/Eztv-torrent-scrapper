@@ -28,6 +28,8 @@ def search_for(season=1, episode=1, sortValue='size', all=False):
         ref_magnet_link = ref_value[3]
         ref_torrent_link = ref_value[2]
 
+        if ref_size == "":
+            ref_size = "0"
         if "MB" in ref_size:
             mod_ref_size = float(ref_size.replace(" ", "").replace("MB", "").strip())
         elif "GB" in ref_size:
@@ -91,10 +93,10 @@ def search_for(season=1, episode=1, sortValue='size', all=False):
 
     return sorted(match_dictionary.items())
 
-l = search_for(all=True, sortValue="seed")
+l = search_for(all=True, sortValue="name")
 
 for item in l:
-    print(item)
+    print(item[1]["title"])
 
 
 
