@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>914</width>
-    <height>578</height>
+    <width>915</width>
+    <height>600</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -192,67 +192,122 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>150</y>
+      <y>140</y>
       <width>893</width>
-      <height>411</height>
+      <height>421</height>
      </rect>
     </property>
     <property name="title">
-     <string>Choose the Season and/or Episode you want to get magnet liinks for...</string>
+     <string>Choose the Season and/or Episode you want to get magnet or links for...</string>
     </property>
     <widget class="QGroupBox" name="groupBox_3">
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>98</y>
-       <width>871</width>
-       <height>301</height>
+       <x>0</x>
+       <y>118</y>
+       <width>891</width>
+       <height>311</height>
       </rect>
      </property>
      <property name="title">
       <string>Results :</string>
      </property>
-     <widget class="QTableWidget" name="resutlTable">
+     <widget class="QStackedWidget" name="stackedWidget">
       <property name="geometry">
        <rect>
-        <x>10</x>
+        <x>-1</x>
         <y>20</y>
-        <width>851</width>
-        <height>271</height>
+        <width>891</width>
+        <height>291</height>
        </rect>
       </property>
-      <property name="autoScrollMargin">
-       <number>6</number>
+      <property name="currentIndex">
+       <number>1</number>
       </property>
-      <property name="selectionBehavior">
-       <enum>QAbstractItemView::SelectRows</enum>
-      </property>
-      <property name="sortingEnabled">
-       <bool>true</bool>
-      </property>
-      <attribute name="horizontalHeaderMinimumSectionSize">
-       <number>100</number>
-      </attribute>
-      <column>
-       <property name="text">
-        <string>Name</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>Size</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>Seeders</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>Magnet Link</string>
-       </property>
-      </column>
+      <widget class="QWidget" name="page">
+       <widget class="QTableWidget" name="resutlTable">
+        <property name="geometry">
+         <rect>
+          <x>-1</x>
+          <y>0</y>
+          <width>891</width>
+          <height>291</height>
+         </rect>
+        </property>
+        <property name="autoScrollMargin">
+         <number>6</number>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <property name="sortingEnabled">
+         <bool>true</bool>
+        </property>
+        <attribute name="horizontalHeaderMinimumSectionSize">
+         <number>100</number>
+        </attribute>
+        <column>
+         <property name="text">
+          <string>Name</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Size</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Seeders</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Magnet Link</string>
+         </property>
+        </column>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="page_2">
+       <widget class="QTableWidget" name="resutlTable_2">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>891</width>
+          <height>291</height>
+         </rect>
+        </property>
+        <property name="autoScrollMargin">
+         <number>6</number>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <property name="sortingEnabled">
+         <bool>true</bool>
+        </property>
+        <attribute name="horizontalHeaderMinimumSectionSize">
+         <number>100</number>
+        </attribute>
+        <column>
+         <property name="text">
+          <string>Name</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Size</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Magnet Link</string>
+         </property>
+        </column>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="page_3"/>
      </widget>
     </widget>
     <widget class="QGroupBox" name="groupBox_4">
@@ -260,146 +315,387 @@
       <rect>
        <x>10</x>
        <y>47</y>
-       <width>871</width>
-       <height>51</height>
+       <width>881</width>
+       <height>67</height>
       </rect>
      </property>
      <property name="title">
       <string>Options: </string>
      </property>
-     <widget class="QSpinBox" name="seasonSpin">
-      <property name="geometry">
-       <rect>
-        <x>80</x>
-        <y>20</y>
-        <width>61</width>
-        <height>22</height>
-       </rect>
-      </property>
-      <property name="toolTip">
-       <string>Season to search for.</string>
-      </property>
-      <property name="minimum">
-       <number>1</number>
-      </property>
-      <property name="maximum">
-       <number>99</number>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_2">
-      <property name="geometry">
-       <rect>
-        <x>20</x>
-        <y>20</y>
-        <width>61</width>
-        <height>21</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>Season : </string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_3">
-      <property name="geometry">
-       <rect>
-        <x>170</x>
-        <y>20</y>
-        <width>61</width>
-        <height>21</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>Episode : </string>
-      </property>
-     </widget>
-     <widget class="QSpinBox" name="episodeSpin">
-      <property name="geometry">
-       <rect>
-        <x>230</x>
-        <y>20</y>
-        <width>61</width>
-        <height>22</height>
-       </rect>
-      </property>
-      <property name="toolTip">
-       <string>Episode to search for.</string>
-      </property>
-      <property name="minimum">
-       <number>1</number>
-      </property>
-      <property name="maximum">
-       <number>500</number>
-      </property>
-     </widget>
      <widget class="QPushButton" name="searchButton">
       <property name="geometry">
        <rect>
-        <x>560</x>
-        <y>14</y>
-        <width>111</width>
-        <height>31</height>
+        <x>760</x>
+        <y>27</y>
+        <width>85</width>
+        <height>27</height>
        </rect>
       </property>
       <property name="toolTip">
-       <string>Search for an episode's download link(magnet link) from the localy available database.</string>
+       <string>Search for an title's download link(magnet link) from the localy available database.</string>
       </property>
       <property name="text">
        <string>Search..</string>
       </property>
      </widget>
-     <widget class="QComboBox" name="sortValueCombo">
+     <widget class="Line" name="line">
       <property name="geometry">
        <rect>
-        <x>380</x>
-        <y>20</y>
-        <width>91</width>
-        <height>22</height>
+        <x>253</x>
+        <y>25</y>
+        <width>16</width>
+        <height>31</height>
        </rect>
       </property>
-      <item>
-       <property name="text">
-        <string>Size</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Name</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Seeders</string>
-       </property>
-      </item>
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
      </widget>
-     <widget class="QLabel" name="label_4">
+     <widget class="QToolButton" name="toolButton">
       <property name="geometry">
        <rect>
-        <x>320</x>
-        <y>20</y>
-        <width>61</width>
-        <height>21</height>
+        <x>850</x>
+        <y>27</y>
+        <width>25</width>
+        <height>27</height>
        </rect>
       </property>
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-       </font>
+      <property name="toolTip">
+       <string>Online Search settings</string>
       </property>
       <property name="text">
-       <string>Sort By: </string>
+       <string>...</string>
       </property>
      </widget>
+     <widget class="QWidget" name="layoutWidget_2">
+      <property name="geometry">
+       <rect>
+        <x>430</x>
+        <y>25</y>
+        <width>185</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_6">
+       <item>
+        <widget class="QLabel" name="label_6">
+         <property name="minimumSize">
+          <size>
+           <width>77</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>77</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Search For..</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="searchForCombo">
+         <property name="minimumSize">
+          <size>
+           <width>100</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>100</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>Configure what to search for</string>
+         </property>
+         <item>
+          <property name="text">
+           <string>TV-Show</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Movie</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Subtitles</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="Line" name="line_2">
+      <property name="geometry">
+       <rect>
+        <x>413</x>
+        <y>25</y>
+        <width>16</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+     </widget>
+     <widget class="Line" name="line_3">
+      <property name="geometry">
+       <rect>
+        <x>616</x>
+        <y>25</y>
+        <width>16</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+     </widget>
+     <widget class="QWidget" name="">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>25</y>
+        <width>257</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <item>
+        <widget class="QRadioButton" name="season_episodeRadio">
+         <property name="minimumSize">
+          <size>
+           <width>20</width>
+           <height>24</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>25</width>
+           <height>25</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <weight>50</weight>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_2">
+         <property name="minimumSize">
+          <size>
+           <width>50</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>50</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Season : </string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="seasonSpin">
+         <property name="minimumSize">
+          <size>
+           <width>50</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>50</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>Season to search for.</string>
+         </property>
+         <property name="minimum">
+          <number>1</number>
+         </property>
+         <property name="maximum">
+          <number>99</number>
+         </property>
+         <property name="value">
+          <number>1</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_3">
+         <property name="minimumSize">
+          <size>
+           <width>55</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>55</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Episode : </string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="episodeSpin">
+         <property name="minimumSize">
+          <size>
+           <width>50</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>50</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>Episode to search for.</string>
+         </property>
+         <property name="minimum">
+          <number>1</number>
+         </property>
+         <property name="maximum">
+          <number>500</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="">
+      <property name="geometry">
+       <rect>
+        <x>270</x>
+        <y>25</y>
+        <width>142</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_5">
+       <item>
+        <widget class="QLabel" name="label_4">
+         <property name="minimumSize">
+          <size>
+           <width>53</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>20</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Sort By: </string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="sortValueCombo">
+         <property name="minimumSize">
+          <size>
+           <width>81</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>80</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <item>
+          <property name="text">
+           <string>Size</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Name</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Seeders</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <zorder>line</zorder>
+     <zorder>seasonSpin</zorder>
+     <zorder>label_2</zorder>
+     <zorder>label_3</zorder>
+     <zorder>episodeSpin</zorder>
+     <zorder>searchButton</zorder>
+     <zorder>sortValueCombo</zorder>
+     <zorder>label_4</zorder>
+     <zorder>toolButton</zorder>
+     <zorder>layoutWidget_2</zorder>
+     <zorder>line_2</zorder>
+     <zorder>line_3</zorder>
     </widget>
     <widget class="QWidget" name="layoutWidget">
      <property name="geometry">
@@ -407,7 +703,7 @@
        <x>10</x>
        <y>20</y>
        <width>871</width>
-       <height>29</height>
+       <height>33</height>
       </rect>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -468,8 +764,11 @@
           <height>16777215</height>
          </size>
         </property>
+        <property name="toolTip">
+         <string>See more information regarding the searched title online</string>
+        </property>
         <property name="text">
-         <string>More Info.</string>
+         <string>More Info...</string>
         </property>
        </widget>
       </item>
@@ -479,6 +778,23 @@
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
  </widget>
+ <tabstops>
+  <tabstop>enterCheck</tabstop>
+  <tabstop>chooseCheck</tabstop>
+  <tabstop>titleCombo</tabstop>
+  <tabstop>getDataButton</tabstop>
+  <tabstop>titleEdit</tabstop>
+  <tabstop>searchButton</tabstop>
+  <tabstop>resutlTable</tabstop>
+  <tabstop>searchForCombo</tabstop>
+  <tabstop>sortValueCombo</tabstop>
+  <tabstop>episodeSpin</tabstop>
+  <tabstop>seasonSpin</tabstop>
+  <tabstop>season_episodeRadio</tabstop>
+  <tabstop>moreInfoButton</tabstop>
+  <tabstop>resutlTable_2</tabstop>
+  <tabstop>toolButton</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
@@ -526,6 +842,54 @@
     <hint type="destinationlabel">
      <x>376</x>
      <y>80</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>season_episodeRadio</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>seasonSpin</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>42</x>
+     <y>222</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>140</x>
+     <y>228</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>season_episodeRadio</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>episodeSpin</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>41</x>
+     <y>217</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>249</x>
+     <y>223</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>searchForCombo</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>stackedWidget</receiver>
+   <slot>setCurrentIndex(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>561</x>
+     <y>229</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>582</x>
+     <y>294</y>
     </hint>
    </hints>
   </connection>

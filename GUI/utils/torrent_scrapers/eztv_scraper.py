@@ -75,6 +75,7 @@ def get_torrents(movie_title=None, ez_id=None):
         try:
             query_string = list(re.compile(r'([SE][0-9]+|[0-9]+x[0-9]+)').finditer(eztv_title))[0].group()
 
+
             if query_string.startswith("S"):
                 se_ep_ptring = list(re.compile(r'[SE][0-9]+').finditer(eztv_title))
                 season = se_ep_ptring[0].group().replace("S", "")

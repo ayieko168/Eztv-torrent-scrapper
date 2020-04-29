@@ -36,6 +36,7 @@ class App(QMainWindow):
         self.ui.getDataButton.clicked.connect(self.getDataCMD)
         self.ui.searchButton.clicked.connect(self.searchCMD)
         self.ui.moreInfoButton.clicked.connect(self.showMoreInfo)
+        self.ui.searchForCombo.currentIndexChanged.connect(self.changeSeachFor)
         
         ## SETUP TABLE
         header = self.ui.resutlTable.horizontalHeader()
@@ -48,6 +49,11 @@ class App(QMainWindow):
 
         ## get the current database title and set the "dataNameLable"
         self.get_current_db_title()
+
+    def changeSeachFor(self):
+
+        selection = self.ui.searchForCombo.currentText()
+
 
     def get_current_db_title(self):
 
@@ -194,7 +200,7 @@ class App(QMainWindow):
 
             magnet_link = itemData[3]
 
-            webbrowser.open_new(magnet_link)
+            webbrowser.open_new_tab(magnet_link)
 
     def showMoreInfo(self):
 
@@ -266,6 +272,10 @@ class App(QMainWindow):
             ref_magnet_link = ref_value[3]
             ref_torrent_link = ref_value[2]
 
+            if ref_size == "":
+                ref_size = "0"
+            if (ref_seeds == "") or (ref_seeds == "-"):
+                ref_seeds = "0"
             if "MB" in ref_size:
                 mod_ref_size = float(ref_size.replace(" ", "").replace("MB", "").strip())
             elif "GB" in ref_size:
