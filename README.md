@@ -23,6 +23,8 @@ look for the executable file within the extracted file.
 If you are on linux, you can help me finish up making the software plartform-indipendent and send pull requests.
 For now you will have to wait till I finish it ;)
 
+You can download the [latest release](https://github.com/ayieko168/Eztv-torrent-scrapper/releases/latest) and extract the archive file. you can then follow the instructions on that page to run the program.
+
 # SCREENSHOTS
  Bellow shows a screenshot of the application.
  ![GitHub Logo](/Screenshots/Frontend-Inactive.png)
@@ -32,6 +34,17 @@ For now you will have to wait till I finish it ;)
 
 # FUTURE ADVANCES
 In the future I want to:
-- [ ] Make the program plartform-indipendent (Work on any plartform, ie:Windows, Linux, OS-X)
+- [x] Make the program plartform-indipendent (Work on any plartform, ie:Windows, Linux, OS-X)
 - [ ] The program should be able to scrape Movies instead of Tv-Shows only
-- [ ] The user should be able to chose the websites the crawler visits to scrape for the torrents
+- [ ] The user should be able to chose the websites the crawler visits to scrape for the torrents. From websites such as:
+    - [ ] 1337x
+    - [ ] Demonoid
+    - [ ] ExtraTorrent
+    - [x] EZTV
+    - [ ] isoHunt
+    - [ ] KickassTorrents
+    - [ ] Nyaa Torrents
+    - [ ] RARBG
+    - [ ] Tamil Rockers 
+    - [ ] The Pirate Bay 
+    - [ ] YIFY
