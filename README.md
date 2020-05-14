@@ -48,3 +48,5 @@ In the future I want to:
     - [ ] Tamil Rockers 
     - [ ] The Pirate Bay 
     - [ ] YIFY
+    
+ - [ ] Ability to scrape for and download subtitles
