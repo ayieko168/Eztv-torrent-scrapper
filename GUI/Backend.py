@@ -2,13 +2,13 @@ import urllib.request
 from bs4 import BeautifulSoup
 import json
 from ast import literal_eval
-import sys, time
+import sys, time, re, string
 import operator, webbrowser
 from PyQt5.QtCore import QPoint, pyqtSlot
 from PyQt5.QtWidgets import QMainWindow, QHeaderView, QMessageBox, QTableWidgetItem, QApplication, QMenu
 from PyQt5 import QtGui, QtCore
 from utils.design_files.MainDesign import *
-from utils.torrent_scrapers import eztv_scraper
+from utils.resources import torrent_scrapers
 from collections import OrderedDict
 
 ## Plartform Spesific Variables
@@ -23,7 +23,6 @@ elif sys.platform == "linux":
     # ref_Path = "./utils/resources/ref_.json"
     ref_Path = "utils/resources/EZTV_RFERENCE_DICTIONARY.json"
 
-
 class App(QMainWindow):
 
     def __init__(self):
@@ -31,29 +30,34 @@ class App(QMainWindow):
         super().__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        
+        ## Variables
+        self.changed = False
 
+        ## Connections
         self.ui.titleCombo.addItems(self.getTitles())
         self.ui.getDataButton.clicked.connect(self.getDataCMD)
         self.ui.searchButton.clicked.connect(self.searchCMD)
         self.ui.moreInfoButton.clicked.connect(self.showMoreInfo)
-        self.ui.searchForCombo.currentIndexChanged.connect(self.changeSeachFor)
-        
-        ## SETUP TABLE
-        header = self.ui.resutlTable.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
-        # header.setSectionResizeMode(3, QHeaderView.Stretch)
-        self.ui.resutlTable.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.ui.resutlTable.customContextMenuRequested.connect(self.on_customContextMenuRequested)
+        self.ui.searchForCombo.currentIndexChanged.connect(self.change_scrapers_in_combo)
+        self.ui.scraperCombo.currentIndexChanged.connect(self.make_scaper_combo_changes)
+
+        ## SETUP TABLES
+        for table in [self.ui.showResutlTable, self.ui.moviesResutlTable, self.ui.animeResutlTable, self.ui.subtitleResutlTable]:
+            header = table.horizontalHeader()
+            header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+            header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+            header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
+            # header.setSectionResizeMode(3, QHeaderView.Stretch)
+            table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+            table.customContextMenuRequested.connect(self.on_customContextMenuRequested)
 
         ## get the current database title and set the "dataNameLable"
         self.get_current_db_title()
 
-    def changeSeachFor(self):
+    def make_scaper_combo_changes(self):
 
-        selection = self.ui.searchForCombo.currentText()
-
+        self.changed=True
 
     def get_current_db_title(self):
 
@@ -74,90 +78,268 @@ class App(QMainWindow):
         
         return titles
 
+    def change_scrapers_in_combo(self):
+
+        if self.ui.searchForCombo.currentText().lower() == "TV-Show".lower():
+            print("change to tv show scrapers")
+            tv_scrapers = ['EZTV', 'Kickass', 'The Pirate Bay', 'All Sites']
+            self.ui.scraperCombo.clear()
+            self.ui.scraperCombo.addItems(tv_scrapers)
+
+        elif self.ui.searchForCombo.currentText().lower() == "Movie".lower():
+            print("change to movie scrapers")
+            movie_scrapers = ['YIFI', 'Kickass', 'The Pirate Bay', 'All Sites']
+            self.ui.scraperCombo.clear()
+            self.ui.scraperCombo.addItems(movie_scrapers)
+
+        elif self.ui.searchForCombo.currentText().lower() == "Anime".lower():
+            print("change to anime scrapers")
+            anime_scrapers = ['Nyaa', 'Anime Tosho', 'Kickass', 'All Sites']
+            self.ui.scraperCombo.clear()
+            self.ui.scraperCombo.addItems(anime_scrapers)
+
+        elif self.ui.searchForCombo.currentText().lower() == "Subtitles".lower():
+            print("change to subs sracpers")
+            subs_scrapers = ['Open Subs', 'YIFI Subs', 'Tv Subs .com', 'Tv Subs .net', 'All Sites']
+            self.ui.scraperCombo.clear()
+            self.ui.scraperCombo.addItems(subs_scrapers)
+
     def getDataCMD(self):
-        """command that downloads the <title> torrnt info and writed it to a json file as a search reference"""
+        """command that downloads the <title> torrent info and writes it to a json file as a search reference"""
 
-        with open(ref_Path, "r") as refernce_Fo:
-            reference_dict = json.load(refernce_Fo)
+        with open('utils/resources/result.json', 'r') as resutlsFO:
+            results_dictionary = json.load(resutlsFO)
+        with open('utils/resources/EZTV_RFERENCE_DICTIONARY.json', 'r') as eztv_ref_FO:
+            eztv_reference_dictionary = json.load(eztv_ref_FO)
 
-        title = ""
-
-        ## Check if there is any selected input method and input text
-        if (self.ui.enterCheck.isChecked()) and (self.ui.titleEdit.text() != ""):
-            title = self.ui.titleEdit.text()
-        elif (self.ui.chooseCheck.isChecked()) and (self.ui.titleCombo.currentText() != "Select A Title..."):
-            title = self.ui.titleCombo.currentText()
-        else:
-            self.ui.statusBar.showMessage("ERROR WITH THE SEARCH TITLE....Good Bye.", 2000)
+        ## Ensure there is a query title
+        if (self.ui.titleEdit.text() == '') and (self.ui.enterCheck.isChecked()):
+            self.message("Please Enter a Search title. Try Game Of Thrones :)", "INFO")
+            return
+        if (self.ui.titleCombo.currentText() == 'Select A Title...') and (self.ui.chooseCheck.isChecked()):
+            self.message("Please Enter a Search title. Try Game Of Thrones :)", "INFO")
             return
 
-        ## Check if the search title is in the local refernce db
-        searc_title = title.lower().replace(" ", "-")
-        if searc_title in reference_dict:
+        ## Get the current search title
+        if self.ui.enterCheck.isChecked(): title = self.ui.titleEdit.text()
+        elif self.ui.chooseCheck.isChecked(): title = self.ui.titleCombo.currentText()
 
-            search_ez_id = int(reference_dict[searc_title][1])
-            found_torrents_dict, found_torrents_count, ret_code = eztv_scraper.get_torrents(ez_id=search_ez_id)
+        title = title.strip()
 
-            print(found_torrents_dict)
+        ## check if the title is the one in the current local db
+        if results_dictionary != {}:
+            if (title == results_dictionary["0"][0]) and (not self.changed):
+                rc = self.message("This title is already scraped, Do you want to scrape again?", message_type='ASK')
+                if rc == QMessageBox.Yes:
+                    pass
+                elif rc == QMessageBox.No:
+                    return
+
+        ## Check for the selected scraper
+        requested_scraper = self.ui.scraperCombo.currentText().lower()
+
+        ## Use requested scraper to get the torrents
+        if requested_scraper == 'eztv':
+            title = title.strip().lower().replace(' ', '-')
+
+            # check if the title is in the eztv reference, if it is there us its eztv id to do the search
+            if title in eztv_reference_dictionary.keys():
+                print("using id")
+                title_eztv_id = int(eztv_reference_dictionary[title][1])
+                torents_dictionary , torrents_count, return_code = torrent_scrapers.eztv_scraper(ez_id=title_eztv_id)
+            else:
+                print("using title")
+                torents_dictionary, torrents_count, return_code = torrent_scrapers.eztv_scraper(movie_title=title)
+
+
+        elif requested_scraper == 'kickass' and self.ui.searchForCombo.currentText().lower() == "tv-show":
+
+            print("use kickass tv show")
+            torents_dictionary, torrents_count, return_code = torrent_scrapers.kick_ass_scraper_tv(movie_title=title)
+
+
+        elif requested_scraper == 'kickass' and self.ui.searchForCombo.currentText().lower() == "anime":
+
+            print("use kickass anime")
+            torents_dictionary, torrents_count, return_code = torrent_scrapers.kick_ass_scraper_anime(movie_title=title)
+
+        elif requested_scraper == "nyaa":
+            print("use nyaa anime")
+            torents_dictionary, torrents_count, return_code = torrent_scrapers.nyaa_scraper(movie_title=title)
+
+        elif requested_scraper.lower() == 'Anime Tosho'.lower():
+            print("use Anime Tosho")
+            torents_dictionary, torrents_count, return_code = torrent_scrapers.anime_tosho_scraper(movie_title=title)
+
+        elif requested_scraper.lower() == "All Sites".lower():
+            print("Gathering torrents from all the sites")
+
+            # Get the search category
+            if self.ui.searchForCombo.currentText().lower() == "TV-Show":
+                # Search for the torrent using tv_series torren sites
+                pass
 
         else:
-            found_torrents_dict, found_torrents_count, ret_code = eztv_scraper.get_torrents(movie_title=searc_title)
+            self.message("It seams the scraper you selected is not yet functional, please select another")
+            return
 
-            print(found_torrents_dict)
+        ## Process the returned torrent data
+        # If the scrape was successful
+        if return_code == True:
 
-        # self.ui.statusBar.showMessage("Starting the download... Please wait...")
+            ## Write the info to the reference dictionary
+            with open('utils/resources/result.json', 'w') as result_fo:
+                json.dump(torents_dictionary, result_fo, indent=2)
+
+            ## Give successfull message box
+            self.message(f"The scrape was successful. Found {torrents_count} torrent. Thank ayieko168 latter! ")
+
+            ## Rename the 'current database' label
+            try:
+                self.ui.dataNameLabel.setText(torents_dictionary[0][0].title())
+            except KeyError:
+                self.ui.dataNameLabel.setText("None")
+                with open('utils/resources/result.json', 'w') as result_fo:
+                    json.dump({"0": ["None", "", "", "", "", "", "", ""]}, result_fo, indent=2)
+
+        # If the process was NOT suucessful
+        if return_code == False:
+
+            ## Give runtime error message box
+            self.message("There was a problem during the scrape")
         
+        ## Change the scraper combo variable
+        self.changed = False
 
-        if ret_code == True:
-            self.ui.dataNameLabel.setText(title)
+    def displayResultOnTable(self, torrent_dictionary, on_table):
 
-            with open(resultPath, "w") as results_Fo:
-                json.dump(found_torrents_dict, results_Fo, indent=2)
-
-            QMessageBox.information(self, "Information!", f"Succsessfully downloaded database on \"{title.title()}\"\nThank Antony Later! #1960")
-            self.ui.statusBar.showMessage("Done.", 2000)
-
-        elif ret_code == False:
-            QMessageBox.critical(self, "ERROR", "PLEASE CHECK YOUR INTERNET CONNECTION")
-            self.ui.statusBar.showMessage(f"Error.. exit code >> {ret_code}", 2000)
-  
-    def displayResultOnTable(self, torrent_dictionary):
-
-        table = self.ui.resutlTable
+        table = on_table
 
         rowPosition = table.rowCount()
         table.insertRow(rowPosition)
 
         ## Set column data
-        table.setItem(rowPosition, 0, QTableWidgetItem(str(torrent_dictionary['title'])))
-        table.setItem(rowPosition, 1, QTableWidgetItem(str(torrent_dictionary['size'])))
-        table.setItem(rowPosition, 2, QTableWidgetItem(str(torrent_dictionary['seeds'])))
-        table.setItem(rowPosition, 3, QTableWidgetItem(str(torrent_dictionary['magnet_link'])))
+        table.setItem(rowPosition, 0, QTableWidgetItem(str(torrent_dictionary[1])))  # Title
+        table.setItem(rowPosition, 1, QTableWidgetItem(str(torrent_dictionary[4])))  # Size
+        table.setItem(rowPosition, 2, QTableWidgetItem(str(torrent_dictionary[5])))  # Seeds
+        table.setItem(rowPosition, 3, QTableWidgetItem(str(torrent_dictionary[3])))  # Magnet link
 
         ## Set text alignment
         table.item(rowPosition, 1).setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
         table.item(rowPosition, 2).setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
 
     def searchCMD(self):
+        """Call back function for the 'search' button, for quering the local db"""
 
-        season = self.ui.seasonSpin.text()
-        episode = self.ui.episodeSpin.text()
-        sort_value = self.ui.sortValueCombo.currentText().lower()
+        ## Get the table where to display the info
+        if self.ui.searchForCombo.currentText().lower() == "TV-Show".lower(): table = self.ui.showResutlTable
+        elif self.ui.searchForCombo.currentText().lower() == "Movie".lower(): table = self.ui.moviesResutlTable
+        elif self.ui.searchForCombo.currentText().lower() == "Anime".lower(): table = self.ui.animeResutlTable
+        elif self.ui.searchForCombo.currentText().lower() == "Subtitles".lower(): table = self.ui.subtitleResutlTable
+        else: table = self.ui.showResutlTable
 
-        resultDict = self.search_for(int(season), int(episode), sort_value=sort_value)
+        ## Populate the table with queried data
+        sort_key = self.ui.sortValueCombo.currentText()
 
-        # Clear all table rows and display results
-        self.ui.resutlTable.setRowCount(0)
-        for found_torrent_dict in resultDict:
-            self.displayResultOnTable(found_torrent_dict[1])
+        # Season, Episode and Search Term
+        if (self.ui.seasonCheck.isChecked()) and (self.ui.episodeCheck.isChecked()) and (self.ui.searchTermCheck.isChecked()):
+            season_query = self.ui.seasonSpin.text()
+            episode_query = self.ui.episodeSpin.text()
+            term_query = self.ui.searchTermEntry.text()
+
+            query_dict = self.search_for(query_season=season_query, query_episode=episode_query, sort_value=sort_key, query_term=term_query)
+
+            # Clear all table rows and display results
+            table.setRowCount(0)
+            for found_torrent_list in query_dict:
+                self.displayResultOnTable(found_torrent_list, on_table=table)
+
+        # Season and episode
+        elif (self.ui.seasonCheck.isChecked() and self.ui.seasonCheck.isEnabled()) and (self.ui.episodeCheck.isChecked() and self.ui.episodeCheck.isEnabled()):
+            season_query = self.ui.seasonSpin.text()
+            episode_query = self.ui.episodeSpin.text()
+
+            query_dict = self.search_for(query_season=season_query, query_episode=episode_query, sort_value=sort_key)
+
+            # Clear all table rows and display results
+            table.setRowCount(0)
+            for found_torrent_list in query_dict:
+                self.displayResultOnTable(found_torrent_list, on_table=table)
+
+        # Season And Serch Term
+        elif (self.ui.searchTermCheck.isChecked() and self.ui.searchTermCheck.isEnabled()) and (self.ui.seasonCheck.isChecked() and self.ui.seasonCheck.isEnabled()):
+            term_query = self.ui.searchTermEntry.text()
+            season_query = self.ui.seasonSpin.text()
+
+            query_dict = self.search_for(query_season=season_query, query_term=term_query, sort_value=sort_key)
+
+            # Clear all table rows and display results
+            table.setRowCount(0)
+            for found_torrent_list in query_dict:
+                self.displayResultOnTable(found_torrent_list, on_table=table)
+
+        # Season
+        elif self.ui.seasonCheck.isChecked() and self.ui.seasonCheck.isEnabled():
+            season_query = self.ui.seasonSpin.text()
+
+            query_dict = self.search_for(query_season=season_query, sort_value=sort_key)
+
+            # Clear all table rows and display results
+            table.setRowCount(0)
+            for found_torrent_list in query_dict:
+                self.displayResultOnTable(found_torrent_list, on_table=table)
+
+        # Search Term, All
+        elif (self.ui.searchTermCheck.isChecked() and self.ui.searchTermCheck.isEnabled()) and (self.ui.displayAllCheck.isChecked() and self.ui.displayAllCheck.isEnabled()):
+            term_query = self.ui.searchTermEntry.text()
+
+            query_dict = self.search_for(query_term=term_query, sort_value=sort_key)
+
+            # Clear all table rows and display results
+            table.setRowCount(0)
+            for found_torrent_list in query_dict:
+                self.displayResultOnTable(found_torrent_list, on_table=table)
+
+        # Search Term Only
+        elif self.ui.searchTermCheck.isChecked() and self.ui.searchTermCheck.isEnabled():
+            term_query = self.ui.searchTermEntry.text()
+
+            query_dict = self.search_for(query_term=term_query, sort_value=sort_key)
+
+            # Clear all table rows and display results
+            table.setRowCount(0)
+            for found_torrent_list in query_dict:
+                self.displayResultOnTable(found_torrent_list, on_table=table)
+
+
+        # All
+        elif self.ui.displayAllCheck.isChecked() and self.ui.displayAllCheck.isEnabled():
+
+            query_dict = self.search_for(all=True, sort_value=sort_key)
+
+            # Clear all table rows and display results
+            table.setRowCount(0)
+            for found_torrent_list in query_dict:
+                self.displayResultOnTable(found_torrent_list, on_table=table)
+
+        else:
+            query_dict = self.search_for(all=True, sort_value=sort_key)
+
+            # Clear all table rows and display results
+            table.setRowCount(0)
+            for found_torrent_list in query_dict:
+                self.displayResultOnTable(found_torrent_list, on_table=table)
+
+        w.processEvents()
 
     @pyqtSlot(QPoint)
     def on_customContextMenuRequested(self, pos):
 
+        w.processEvents()
         table = QApplication.focusWidget()
         tableName = table.objectName()
 
-        if self.ui.resutlTable.rowCount() <= 0:
+        if table.rowCount() <= 0:
             return
 
         def getItemData(itemIndex):
@@ -176,8 +358,12 @@ class App(QMainWindow):
 
         copy = menu.addAction("Copy")
         menu.addSeparator()
-        _open = menu.addAction("Open in Bittorren Client")
-        menu.addSeparator()
+        if self.ui.searchForCombo.currentText() == "TV-Show":
+            _open = menu.addAction("Open in Bittorren Client")
+            menu.addSeparator()
+        elif self.ui.searchForCombo.currentText() == "Subtitles":
+            _open = menu.addAction("Open in Bittorren Client")
+            menu.addSeparator()
         
         action = menu.exec_(QtGui.QCursor.pos())
 
@@ -245,100 +431,169 @@ class App(QMainWindow):
         with open ("the_data.md", "w")as fff:
             fff.write(str(table_element))
 
-    def search_for(self, season=1, episode=1, sort_value='size', all=False):
-        """ search for the season and episode in the results json file
-            :returns: A List of touples with format (sort_value, torent_dictionary)
-            sort_value ==> name=Name, size=Size, seeders=Seeders"""
+    def search_for(self, query_season=None, query_episode=None, query_term=None, sort_value='name', all=False):
 
-        search_dictionary = OrderedDict()
-        match_dictionary = OrderedDict()
-
-        self.search_season = "{:02}".format(season)
-        self.search_episode = "{:02}".format(episode)
-        self.sort_value = sort_value
-        self.all = all
+        filtered_dict = {}
+        sorted_dict = OrderedDict()
+        sort_value = sort_value.lower()
 
         with open("./utils/resources/result.json", "r") as jsonFo:
             search_dictionary = json.load(jsonFo)
 
-        counter = 1
-        for _, ref_value in search_dictionary.items():
+        if not all:
+            ## (Apply the filter) Loop through each item in the result dictonary - each item is a list containig individual torrent data
+            count = 0
+            for _, values in search_dictionary.items():
+                # print(values)
 
-            ref_season = ref_value[6]
-            ref_episode = ref_value[7]
-            ref_name = ref_value[1]
-            ref_size = ref_value[4]
-            ref_seeds = ref_value[5]
-            ref_magnet_link = ref_value[3]
-            ref_torrent_link = ref_value[2]
+                ## Get the individual item data values
+                title, torrent_name, torrent_link, magnet_link, size, seeds, season, episode = values
 
-            if ref_size == "":
-                ref_size = "0"
-            if (ref_seeds == "") or (ref_seeds == "-"):
-                ref_seeds = "0"
-            if "MB" in ref_size:
-                mod_ref_size = float(ref_size.replace(" ", "").replace("MB", "").strip())
-            elif "GB" in ref_size:
-                mod_ref_size = float(ref_size.replace(" ", "").replace("GB", "").strip())
-                mod_ref_size = mod_ref_size * 1e3
-            else:
-                mod_ref_size = float(ref_size)
+                # season only filter
+                if query_term is None and query_season is not None and query_episode is None:
+                    query_season = "{:02}".format(int(query_season))
+                    if query_season == season:
+                        # print(values[1])
+                        filtered_dict[count] = values
+                        count += 1
 
-            # Search to find if the searched <season> and <episode> are in an item's value
-            if (ref_season == self.search_season) and (ref_episode == self.search_episode) and not self.all:
-                # print("returning searched")
-                "name=Name, size=Size, seeders=Seeders"
-                if self.sort_value == "size":
-                    match_dictionary[mod_ref_size + time.time()] = {"title": ref_name, "torrent_link": ref_torrent_link,
-                                                                    "magnet_link": ref_magnet_link,
-                                                                    "size": ref_size, "seeds": ref_seeds,
-                                                                    "season": ref_season, "episode": ref_episode}
-                elif self.sort_value == "name":
-                    match_dictionary[ref_name] = {"title": ref_name, "torrent_link": ref_torrent_link,
-                                                  "magnet_link": ref_magnet_link,
-                                                  "size": ref_size, "seeds": ref_seeds, "season": ref_season,
-                                                  "episode": ref_episode}
-                elif self.sort_value == "seeders":
-                    match_dictionary[float(ref_seeds) + float(time.time())] = {"title": ref_name,
-                                                                               "torrent_link": ref_torrent_link,
-                                                                               "magnet_link": ref_magnet_link,
-                                                                               "size": ref_size, "seeds": ref_seeds,
-                                                                               "season": ref_season,
-                                                                               "episode": ref_episode}
-                else:
-                    match_dictionary[mod_ref_size + time.time()] = {"title": ref_name, "torrent_link": ref_torrent_link,
-                                                                    "magnet_link": ref_magnet_link,
-                                                                    "size": ref_size, "seeds": ref_seeds,
-                                                                    "season": ref_season, "episode": ref_episode}
+                # season and episode filter
+                elif query_term is None and query_season is not None and query_episode is not None:
+                    query_season = "{:02}".format(int(query_season))
+                    query_episode = "{:02}".format(int(query_episode))
+                    if query_season == season and query_episode == episode:
+                        # print(values[1])
+                        filtered_dict[count] = values
+                        count += 1
 
-            if all:
-                # print("returning all")
-                if self.sort_value == "size":
-                    match_dictionary[mod_ref_size + time.time()] = {"title": ref_name, "torrent_link": ref_torrent_link,
-                                                                    "magnet_link": ref_magnet_link,
-                                                                    "size": ref_size, "seeds": ref_seeds,
-                                                                    "season": ref_season, "episode": ref_episode}
-                elif self.sort_value == "name":
-                    match_dictionary[ref_name] = {"title": ref_name, "torrent_link": ref_torrent_link,
-                                                  "magnet_link": ref_magnet_link,
-                                                  "size": ref_size, "seeds": ref_seeds, "season": ref_season,
-                                                  "episode": ref_episode}
-                elif self.sort_value == "seeders":
-                    match_dictionary[float(ref_seeds) + float(time.time())] = {"title": ref_name,
-                                                                               "torrent_link": ref_torrent_link,
-                                                                               "magnet_link": ref_magnet_link,
-                                                                               "size": ref_size, "seeds": ref_seeds,
-                                                                               "season": ref_season,
-                                                                               "episode": ref_episode}
-                else:
-                    match_dictionary[mod_ref_size + time.time()] = {"title": ref_name, "torrent_link": ref_torrent_link,
-                                                                    "magnet_link": ref_magnet_link,
-                                                                    "size": ref_size, "seeds": ref_seeds,
-                                                                    "season": ref_season, "episode": ref_episode}
+                # query term filter only
+                elif query_term is not None and query_term != '' and query_season is None and query_episode is None:
+                    if query_term.lower() in torrent_name.lower():
+                        filtered_dict[count] = values
+                        count += 1
 
-        # print(json.dumps(match_dictionary, sort_keys=True, indent=2))
+                # query term and season filter only
+                elif query_term is not None and query_term != '' and query_season is not None and query_episode is None:
+                    query_season = "{:02}".format(int(query_season))
 
-        return sorted(match_dictionary.items())
+                    if query_term.lower() in torrent_name.lower() and query_season == season:
+                        filtered_dict[count] = values
+                        count += 1
+
+                # query term season and episode filter
+                elif query_term is not None and query_term != '' and query_season is not None and query_episode is not None:
+                    query_season = "{:02}".format(int(query_season))
+                    query_episode = "{:02}".format(int(query_episode))
+
+                    if query_term.lower() in torrent_name.lower() and query_season == season and query_episode == episode:
+                        filtered_dict[count] = values
+                        count += 1
+
+            ## (Sort the filterde content) Loop through the filtered dictionaty and use the filter value as key so as to sort with key
+            for _, values in filtered_dict.items():
+                ## Get the individual item data values
+                title, torrent_name, torrent_link, magnet_link, size, seeds, season, episode = values
+
+                if sort_value.lower() == 'Name'.lower():
+                    sorted_dict[str(values)] = torrent_name
+
+                elif sort_value.lower() == 'Seeders'.lower():
+
+                    try:
+                        moded_seeds = int(seeds)
+                    except:
+                        moded_seeds = 0
+
+                    sorted_dict[str(values)] = moded_seeds
+
+                elif sort_value.lower() == 'Size'.lower():
+
+                    if "k".upper() in size.upper():
+                        moded_size = float(size.strip(string.ascii_letters)) * 1e-3
+                    elif "m".upper() in size.upper():
+                        moded_size = float(size.strip(string.ascii_letters))
+                    elif "g".upper() in size.upper():
+                        moded_size = float(size.strip(string.ascii_letters)) * 1e3
+                    else:
+                        moded_size = float(size.strip(string.ascii_letters)) * 1e6
+
+                    sorted_dict[str(values)] = moded_size
+
+            ## Create the dictionary to hold the sorted filtered values
+            sorted_x = sorted(sorted_dict.items(), key=lambda kv: kv[1])
+            sorted_dict = OrderedDict(sorted_x)  # key=a string list containig values, value=sort value
+
+            ## The final list of torrent lists
+            final_list = [literal_eval(i) for i in sorted_dict.keys()]
+
+        if all:
+            ## (Sort the filterde content) Loop through the filtered dictionaty and use the filter value as key so as to sort with key
+            for _, values in search_dictionary.items():
+                ## Get the individual item data values
+                title, torrent_name, torrent_link, magnet_link, size, seeds, season, episode = values
+
+                if sort_value.lower() == 'Name'.lower():
+                    sorted_dict[str(values)] = torrent_name
+
+                elif sort_value.lower() == 'Seeders'.lower():
+
+                    try:
+                        moded_seeds = int(seeds)
+                    except:
+                        moded_seeds = 0
+
+                    sorted_dict[str(values)] = moded_seeds
+
+                elif sort_value.lower() == 'Size'.lower():
+
+                    if "k".upper() in size.upper():
+                        moded_size = float(size.strip(string.ascii_letters)) * 1e-3
+                    elif "m".upper() in size.upper():
+                        moded_size = float(size.strip(string.ascii_letters))
+                    elif "g".upper() in size.upper():
+                        moded_size = float(size.strip(string.ascii_letters)) * 1e3
+                    else:
+                        moded_size = float(size.strip(string.ascii_letters)) * 1e6
+
+                    sorted_dict[str(values)] = moded_size
+
+            ## Create the dictionary to hold the sorted filtered values
+            sorted_x = sorted(sorted_dict.items(), key=lambda kv: kv[1])
+            sorted_dict = OrderedDict(sorted_x)  # key=a string list containig values, value=sort value
+
+            ## The final list of torrent lists
+            final_list = [literal_eval(i) for i in sorted_dict.keys()]
+
+        return final_list
+
+
+
+    def message(self, message_text, message_type="INFO"):
+        message_text = message_text.title()
+
+        matches = list(re.compile(r'\[[A-Za-z]+\]').finditer(message_text))
+
+        for match in matches:
+            match = match.group()
+            message_text = message_text.replace(match, match.upper())
+
+        if message_type.upper() == "INFO":
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText(message_text)
+            msgBox.setWindowTitle("INFORMATION".upper())
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            returnValue = msgBox.exec()
+            return returnValue
+
+        elif message_type.upper() == 'ASK':
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText(message_text)
+            msgBox.setWindowTitle("QUESTIon".upper())
+            msgBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+            returnValue = msgBox.exec()
+            return returnValue
 
 
 if __name__ == "__main__":
