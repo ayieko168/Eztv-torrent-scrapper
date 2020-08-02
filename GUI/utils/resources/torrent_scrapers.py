@@ -1,18 +1,28 @@
 from requests_html import HTMLSession, HTML
-import re, json, math, time, string
+import re, json, math, time, string, datetime
 from concurrent.futures import ThreadPoolExecutor
+from PyQt5.QtGui import QTextCursor
 
 eztv_season_R_expression = r'(S[0-9]+|[0-9]+x[0-9]+)'
 eztv_episode_R_expression = r'(E[0-9]+|[0-9]+x[0-9]+)'
 
-# all functions here must return :returns : > Dictionary of:
-#                                                :keys = torrent result count (int)
-#                                                :values = [searched_title, torrent_title, torrent_link, magnet_link, size, seeders, season, episode] (list)
-#                                            > The number of torrents found
-#                                            > Weather the scrape was successful
+# gui_widgets == {'console': self.ui.loggingConsole, 'auto-scroll': self.ui.autoScroll, 'print-output': self.ui.showStatusCheck}
 
 
-def eztv_scraper(movie_title=None, ez_id=None, print_output=False):
+def data_logger(gui_widgets, sender, message):
+
+
+    _time = datetime.datetime.now().strftime("%H:%M:%S")
+    log_text = f">>> [{_time}] [{sender}] ==> {message}\n"
+
+    if gui_widgets['auto-scroll'].isChecked():
+        gui_widgets['console'].moveCursor(QTextCursor.End)
+        gui_widgets['console'].insertPlainText(log_text)
+    else:
+        gui_widgets['console'].insertPlainText(log_text)
+
+
+def eztv_scraper(gui_widgets, movie_title=None, ez_id=None, print_output=False):
     """
     :keywords : movie_title=None OR ez_id=None
         A string containing the movie title or movie eztv ID, If None, exits.
@@ -102,7 +112,7 @@ def eztv_scraper(movie_title=None, ez_id=None, print_output=False):
                episode = "00"
 
         ## add item to dict
-
+        data_logger(gui_widgets, "EZTV", f"Got Title: {eztv_title}")
         return_dict[dict_count] = [searched_title, eztv_title, torrent_link, magnet_link, size, seeders, season, episode]
         dict_count += 1
 
@@ -113,7 +123,7 @@ def eztv_scraper(movie_title=None, ez_id=None, print_output=False):
     return return_dict, dict_count, True
 
 
-def kick_ass_scraper_tv(movie_title=None, print_output=False):
+def kick_ass_scraper_tv(gui_widgets, movie_title=None, print_output=False):
 
     """Use thereadpool to open the next pages"""
 
@@ -237,7 +247,7 @@ def kick_ass_scraper_tv(movie_title=None, print_output=False):
     return final_result_dict, count, True
 
 
-def kick_ass_scraper_anime(movie_title=None, print_output=False):
+def kick_ass_scraper_anime(gui_widgets, movie_title=None, print_output=False):
 
     """Use thereadpool to open the next pages"""
 
@@ -361,7 +371,129 @@ def kick_ass_scraper_anime(movie_title=None, print_output=False):
     return final_result_dict, count, True
 
 
-def nyaa_scraper(movie_title=None, print_output=False):
+def kick_ass_scraper_all(gui_widgets, torrent_name=None, print_output=False):
+
+    def fetch(page_url):
+        ## Get torrent data from all pages
+        return_dict = {}
+        dict_count = 0
+
+        print(f"working on {page_url}\n")
+
+        scrape_url = page_url
+        searched_title = torrent_name
+
+        ## Create the requests session
+        main_session = HTMLSession()
+        r_main = main_session.get(scrape_url, timeout=40)
+
+        ## Start scraping for data
+        matches = r_main.html.find("tr.even,tr.odd", first=False)
+
+        for match in matches:
+
+            # get the magnet link
+            torrent_page_url = match.find("a.cellMainLink", first=True).attrs['href']
+            torrent_page_url = "https://kat.am/usearch/" + torrent_page_url
+            print(f"getting magnet link from {torrent_page_url}")
+            session2 = HTMLSession()
+            r2 = session2.get(torrent_page_url, timeout=40)
+
+            # Magnet link
+            try:
+                magnet_link = r2.html.find("a.kaGiantButton", first=True).attrs['href']
+            except Exception as e:
+                print(e)
+                magnet_link = ''
+
+            # Torrent Title
+            try:
+                torrent_title = match.find("a.cellMainLink", first=True).text
+            except Exception as e:
+                print(e)
+                torrent_title = ''
+
+            # Size
+            try:
+                size = match.find("td.nobr", first=True).text
+            except Exception as e:
+                print(e)
+                size = ''
+
+            # seeders
+            try:
+                seeders = match.find("td.green", first=True).text
+            except Exception as e:
+                print(e)
+                seeders = ''
+
+            # Season And Episode
+            try:
+                query_string = list(re.compile(r'([SE][0-9]+|[0-9]+x[0-9]+)').finditer(torrent_title))[0].group()
+
+                if query_string.startswith("S"):
+                    se_ep_ptring = list(re.compile(r'[SE][0-9]+').finditer(torrent_title))
+                    season = se_ep_ptring[0].group().replace("S", "")
+                    episode = se_ep_ptring[1].group().replace("E", "")
+                elif len(query_string.split("x")) == 2:
+                    se_ep_ptring = list(re.compile(r'[0-9]+x[0-9]+').finditer(torrent_title))
+                    season = "{:02}".format(int(se_ep_ptring[0].group().split("x")[0]))
+                    episode = se_ep_ptring[0].group().split("x")[1]
+                else:
+                    season = None
+                    episode = None
+            except Exception as e:
+                season = ''
+                episode = ''
+
+            ## add item to dict
+            return_dict[dict_count] = [torrent_name, torrent_title, torrent_page_url, magnet_link, size, seeders, season,
+                                       episode]
+            dict_count += 1
+
+        return return_dict, dict_count, True
+
+    final_result_dict = {}
+    count = 0
+
+    ## generagte list of pages to visit
+    start_time = time.time()
+
+    if print_output: print("Started process")
+    main_url = "https://kat.am/search/{}/".format(torrent_name)
+    if print_output: print("getting pages")
+    main_session = HTMLSession()
+    r_main = main_session.get(main_url)
+    count_str = r_main.html.find("tr td a.plain", first=True).text
+    if count_str == 'omikrosgavri':
+        return final_result_dict, count, False
+    page_count = math.ceil(int(count_str.split(" ")[-1]) / int(count_str.split(" ")[-3].split('-')[1]))
+    pages_list = [main_url.replace(main_url.split('/')[-2], str(i)) for i in range(1, page_count + 1)][:50]
+    if print_output: print(f"Scrapping {page_count} pages")
+
+    if print_output: print("Starting threadpool...")
+    with ThreadPoolExecutor(max_workers=25) as executor:
+        results = executor.map(fetch, pages_list)
+
+    try:
+        for result in results:
+            for val in result[0].values():
+                final_result_dict[count] = val
+                count += 1
+    except Exception as e:
+        if print_output: print("Exception, error = ", e)
+        else:
+            pass
+
+    if print_output:
+        print(json.dumps(final_result_dict, indent=2))
+        print(f"Finished all ops in {time.time() - start_time} seconds")
+        print("Done")
+
+    return final_result_dict, count, True
+
+
+def nyaa_scraper(gui_widgets, movie_title=None, print_output=False):
 
     """
     :keywords : movie_title=None
@@ -470,7 +602,7 @@ def nyaa_scraper(movie_title=None, print_output=False):
     return final_result_dict, count, True
 
 
-def anime_tosho_scraper(movie_title=None, print_output=False):
+def anime_tosho_scraper(gui_widgets, movie_title=None, print_output=False):
 
     final_result_dict = {}
     count = 0
@@ -566,6 +698,90 @@ def anime_tosho_scraper(movie_title=None, print_output=False):
 
     return final_result_dict, count, True
 
+
+def yify_movie_scraper(gui_widgets, movie_title=None, print_output=False):
+
+    final_result_dict = {}
+    count = 0
+
+    if movie_title is None:
+        # raise Exception("Querry Error! Enter a valid movie title")
+        return final_result_dict, count, False
+    else:
+        start_time = time.time()
+        corected_movie_title = movie_title.lower().replace(' ', '%20').replace('-', '%20')
+        url = f"https://yts.mx/browse-movies/{corected_movie_title}/all/all/0/latest/0/all"
+
+
+    def fetch_data(url):
+        result_dict = {}
+        session = HTMLSession()
+        r = session.get(url)
+
+        matches = r.html.find("div.modal-torrent", first=False)
+
+        count = 0
+        for match in matches:
+            torrent_name = match.find("a.download-torrent", first=True).attrs['title'].replace("Download", "").strip()
+            magnet_link = match.find("a.magnet", first=True).attrs['href']
+            torrent_link = match.find("a.button-green-download2-big", first=True).attrs['href']
+            size = match.find("p.quality-size", first=False)[-1].text
+            movie_mode = match.find("p.quality-size", first=True).text
+            seeders = 999
+            season = ""
+            episode = ""
+            searched_title = ""
+
+            torrent_name = f"{torrent_name} - {movie_mode}"
+
+            result_dict[count] = [searched_title, torrent_name, torrent_link, magnet_link, size, seeders, season,
+                                  episode]
+
+            count += 1
+
+        return result_dict
+
+    session = HTMLSession()
+    r = session.get(url)
+
+    ## Get the list of movie results
+    if print_output:
+        print("Getting the list of movie results...")
+    movie_result_list = [movie.attrs['href'] for movie in r.html.find("div.row div.browse-movie-wrap a.browse-movie-link", first=False)]
+
+    if print_output:
+        print("List of movies found : ", movie_result_list)
+
+    ## Now visit each movie url and get torrent data
+    if print_output:
+        print("Now visit each movie url and get torrent data")
+
+    with ThreadPoolExecutor(max_workers=25) as executor:
+        results = executor.map(fetch_data, movie_result_list)
+
+    try:
+        for result in results:
+            for val in result.values():
+                val[0] = movie_title.title()
+                final_result_dict[count] = val
+                count += 1
+    except Exception as e:
+        if print_output: print("Exception, error = ", e)
+        else:
+            pass
+
+    if print_output:
+        print(json.dumps(final_result_dict, indent=2))
+        print(f"Finished all ops in {time.time() - start_time} seconds")
+        print(f"Found {count} items")
+        print("Done")
+
+    return final_result_dict, count, True
+
+
+
+
+#kick_ass_scraper_all(torrent_name="ben", print_output=True)
 # anime_tosho_scraper("Fairy Tail", print_output=True)
 # kick_ass_scraper(movie_title="peaky blinders", print_output=True)
 # eztv_scraper(movie_title="100", print_output=True)

@@ -4,10 +4,13 @@ import json
 from time import sleep, time
 from ast import literal_eval
 
+# last_page = 0
+# page_no = 195
 last_page = 0
 page_no = 195
 
-
+with open("TVMAZE_REFERENCE_DICTIONARY.json", "w") as ffo:
+    ffo.write("{}")
 
 for curent_page in range(last_page, page_no+1):
     print(f"moving to page {curent_page}")
@@ -21,7 +24,7 @@ for curent_page in range(last_page, page_no+1):
         res = urllib.request.urlopen(url)
         res_body = res.read()
 
-        responce_list = json.loads(res_body.decode("utf-8")) # a list of dictionaries containig show info
+        responce_list = json.loads(res_body.decode("utf-8"))  # a list of dictionaries containig show info
 
         for show_info in responce_list:
             QUERY_NAME = show_info["name"].lower().replace(" ", "-")
@@ -38,11 +41,6 @@ for curent_page in range(last_page, page_no+1):
             data[QUERY_NAME] = {"name": NAME,
                                 "imdb_id": IMDB_ID,
                                 "image_links": IMAGE_LINKS,
-                                "genre": GENRE,
-                                "status": SHOW_STATUS,
-                                "schedule": SCHEDULE,
-                                "premere": PRMERE,
-                                "runtime": SHOW_STATUS
                                 }
 
         with open("TVMAZE_REFERENCE_DICTIONARY.json", "r") as ffo:
@@ -57,4 +55,4 @@ for curent_page in range(last_page, page_no+1):
 
     except Exception as e:
         print(e.args)
-    
+

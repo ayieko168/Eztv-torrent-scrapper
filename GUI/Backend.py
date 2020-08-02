@@ -2,7 +2,7 @@ import urllib.request
 from bs4 import BeautifulSoup
 import json
 from ast import literal_eval
-import sys, time, re, string
+import sys, time, re, string, multiprocessing
 import operator, webbrowser
 from PyQt5.QtCore import QPoint, pyqtSlot
 from PyQt5.QtWidgets import QMainWindow, QHeaderView, QMessageBox, QTableWidgetItem, QApplication, QMenu
@@ -41,6 +41,7 @@ class App(QMainWindow):
         self.ui.moreInfoButton.clicked.connect(self.showMoreInfo)
         self.ui.searchForCombo.currentIndexChanged.connect(self.change_scrapers_in_combo)
         self.ui.scraperCombo.currentIndexChanged.connect(self.make_scaper_combo_changes)
+        self.ui.showStatusCheck.clicked.connect(self.show_status_callback)
 
         ## SETUP TABLES
         for table in [self.ui.showResutlTable, self.ui.moviesResutlTable, self.ui.animeResutlTable, self.ui.subtitleResutlTable]:
@@ -55,9 +56,16 @@ class App(QMainWindow):
         ## get the current database title and set the "dataNameLable"
         self.get_current_db_title()
 
+    def show_status_callback(self):
+
+        if self.ui.showStatusCheck.isChecked():
+            self.ui.stackedWidget_2.setCurrentIndex(1)
+        else:
+            self.ui.stackedWidget_2.setCurrentIndex(0)
+
     def make_scaper_combo_changes(self):
 
-        self.changed=True
+        self.changed = True
 
     def get_current_db_title(self):
 
@@ -85,28 +93,49 @@ class App(QMainWindow):
             tv_scrapers = ['EZTV', 'Kickass', 'The Pirate Bay', 'All Sites']
             self.ui.scraperCombo.clear()
             self.ui.scraperCombo.addItems(tv_scrapers)
+            self.ui.titleEdit.setPlaceholderText("Enter Tv-Show Title")
 
         elif self.ui.searchForCombo.currentText().lower() == "Movie".lower():
             print("change to movie scrapers")
             movie_scrapers = ['YIFI', 'Kickass', 'The Pirate Bay', 'All Sites']
             self.ui.scraperCombo.clear()
             self.ui.scraperCombo.addItems(movie_scrapers)
+            self.ui.titleEdit.setPlaceholderText("Enter Movie Title")
+
+            if not self.ui.displayAllCheck.isChecked():
+                self.ui.displayAllCheck.click()
 
         elif self.ui.searchForCombo.currentText().lower() == "Anime".lower():
             print("change to anime scrapers")
             anime_scrapers = ['Nyaa', 'Anime Tosho', 'Kickass', 'All Sites']
             self.ui.scraperCombo.clear()
             self.ui.scraperCombo.addItems(anime_scrapers)
+            self.ui.titleEdit.setPlaceholderText("Enter Anime Title")
+
+            if not self.ui.displayAllCheck.isChecked():
+                self.ui.displayAllCheck.click()
 
         elif self.ui.searchForCombo.currentText().lower() == "Subtitles".lower():
             print("change to subs sracpers")
             subs_scrapers = ['Open Subs', 'YIFI Subs', 'Tv Subs .com', 'Tv Subs .net', 'All Sites']
             self.ui.scraperCombo.clear()
             self.ui.scraperCombo.addItems(subs_scrapers)
+            self.ui.titleEdit.setPlaceholderText("Enter Subtitle Title")
+
+        elif self.ui.searchForCombo.currentText().lower() == "All Categories".lower():
+            print("change to all torrent sracpers")
+            subs_scrapers = ['Kickass', 'The Pirate Bay', 'Torrent Galaxy', 'RARBG get', '1337x', 'All Sites']
+            self.ui.scraperCombo.clear()
+            self.ui.scraperCombo.addItems(subs_scrapers)
+            self.ui.titleEdit.setPlaceholderText("Enter Subtitle Title")
 
     def getDataCMD(self):
         """command that downloads the <title> torrent info and writes it to a json file as a search reference"""
 
+        return_code = False
+        gui_widgets = {'console': self.ui.loggingConsole, 'auto-scroll': self.ui.autoScroll, 'print-output': self.ui.showStatusCheck}
+
+        ## Get title references for local db
         with open('utils/resources/result.json', 'r') as resutlsFO:
             results_dictionary = json.load(resutlsFO)
         with open('utils/resources/EZTV_RFERENCE_DICTIONARY.json', 'r') as eztv_ref_FO:
@@ -120,13 +149,13 @@ class App(QMainWindow):
             self.message("Please Enter a Search title. Try Game Of Thrones :)", "INFO")
             return
 
-        ## Get the current search title
+        ## Get the current search title (the previously searched title)
         if self.ui.enterCheck.isChecked(): title = self.ui.titleEdit.text()
         elif self.ui.chooseCheck.isChecked(): title = self.ui.titleCombo.currentText()
 
         title = title.strip()
 
-        ## check if the title is the one in the current local db
+        ## check if the title you want to search is the one in the current local db
         if results_dictionary != {}:
             if (title == results_dictionary["0"][0]) and (not self.changed):
                 rc = self.message("This title is already scraped, Do you want to scrape again?", message_type='ASK')
@@ -146,30 +175,34 @@ class App(QMainWindow):
             if title in eztv_reference_dictionary.keys():
                 print("using id")
                 title_eztv_id = int(eztv_reference_dictionary[title][1])
-                torents_dictionary , torrents_count, return_code = torrent_scrapers.eztv_scraper(ez_id=title_eztv_id)
+                torrents_dictionary , torrents_count, return_code = torrent_scrapers.eztv_scraper(ez_id=title_eztv_id, gui_widgets=gui_widgets)
+
             else:
                 print("using title")
-                torents_dictionary, torrents_count, return_code = torrent_scrapers.eztv_scraper(movie_title=title)
-
+                torrents_dictionary, torrents_count, return_code = torrent_scrapers.eztv_scraper(movie_title=title, gui_widgets=gui_widgets)
 
         elif requested_scraper == 'kickass' and self.ui.searchForCombo.currentText().lower() == "tv-show":
 
             print("use kickass tv show")
-            torents_dictionary, torrents_count, return_code = torrent_scrapers.kick_ass_scraper_tv(movie_title=title)
-
+            torrents_dictionary, torrents_count, return_code = torrent_scrapers.kick_ass_scraper_tv(movie_title=title, gui_widgets=gui_widgets)
 
         elif requested_scraper == 'kickass' and self.ui.searchForCombo.currentText().lower() == "anime":
 
             print("use kickass anime")
-            torents_dictionary, torrents_count, return_code = torrent_scrapers.kick_ass_scraper_anime(movie_title=title)
+            torrents_dictionary, torrents_count, return_code = torrent_scrapers.kick_ass_scraper_anime(movie_title=title, gui_widgets=gui_widgets)
 
         elif requested_scraper == "nyaa":
             print("use nyaa anime")
-            torents_dictionary, torrents_count, return_code = torrent_scrapers.nyaa_scraper(movie_title=title)
+            torrents_dictionary, torrents_count, return_code = torrent_scrapers.nyaa_scraper(movie_title=title, gui_widgets=gui_widgets)
 
         elif requested_scraper.lower() == 'Anime Tosho'.lower():
             print("use Anime Tosho")
-            torents_dictionary, torrents_count, return_code = torrent_scrapers.anime_tosho_scraper(movie_title=title)
+            torrents_dictionary, torrents_count, return_code = torrent_scrapers.anime_tosho_scraper(movie_title=title, gui_widgets=gui_widgets)
+
+        elif requested_scraper.lower() == "YIFI".lower():
+
+            print("use YIFY Movies")
+            torrents_dictionary, torrents_count, return_code = torrent_scrapers.yify_movie_scraper(movie_title=title, gui_widgets=gui_widgets)
 
         elif requested_scraper.lower() == "All Sites".lower():
             print("Gathering torrents from all the sites")
@@ -189,18 +222,30 @@ class App(QMainWindow):
 
             ## Write the info to the reference dictionary
             with open('utils/resources/result.json', 'w') as result_fo:
-                json.dump(torents_dictionary, result_fo, indent=2)
+                json.dump(torrents_dictionary, result_fo, indent=2)
 
             ## Give successfull message box
             self.message(f"The scrape was successful. Found {torrents_count} torrent. Thank ayieko168 latter! ")
 
             ## Rename the 'current database' label
             try:
-                self.ui.dataNameLabel.setText(torents_dictionary[0][0].title())
+                self.ui.dataNameLabel.setText(torrents_dictionary[0][0].title())
             except KeyError:
                 self.ui.dataNameLabel.setText("None")
                 with open('utils/resources/result.json', 'w') as result_fo:
                     json.dump({"0": ["None", "", "", "", "", "", "", ""]}, result_fo, indent=2)
+
+            ## Fill the table with all the data
+            # Clear all table rows and display results
+            if self.ui.searchForCombo.currentText().lower() == "TV-Show".lower(): table = self.ui.showResutlTable
+            elif self.ui.searchForCombo.currentText().lower() == "Movie".lower(): table = self.ui.moviesResutlTable
+            elif self.ui.searchForCombo.currentText().lower() == "Anime".lower(): table = self.ui.animeResutlTable
+            elif self.ui.searchForCombo.currentText().lower() == "Subtitles".lower(): table = self.ui.subtitleResutlTable
+            else: table = self.ui.showResutlTable
+
+            table.setRowCount(0)
+            for found_torrent_list in self.search_for(all=True, sort_value=self.ui.sortValueCombo.currentText()):
+                self.displayResultOnTable(found_torrent_list, on_table=table)
 
         # If the process was NOT suucessful
         if return_code == False:
@@ -210,6 +255,10 @@ class App(QMainWindow):
         
         ## Change the scraper combo variable
         self.changed = False
+
+        ## Enable Disabled Buttons
+        self.ui.getDataButton.setEnabled(True)
+        self.ui.searchButton.setEnabled(True)
 
     def displayResultOnTable(self, torrent_dictionary, on_table):
 
@@ -242,7 +291,9 @@ class App(QMainWindow):
         sort_key = self.ui.sortValueCombo.currentText()
 
         # Season, Episode and Search Term
-        if (self.ui.seasonCheck.isChecked()) and (self.ui.episodeCheck.isChecked()) and (self.ui.searchTermCheck.isChecked()):
+        if (self.ui.seasonCheck.isChecked() and self.ui.seasonCheck.isEnabled()) and (self.ui.episodeCheck.isChecked() and self.ui.episodeCheck.isEnabled()) and (self.ui.searchTermCheck.isChecked() and self.ui.searchTermCheck.isEnabled()):
+
+            print("Season, Episode and Search Term")
             season_query = self.ui.seasonSpin.text()
             episode_query = self.ui.episodeSpin.text()
             term_query = self.ui.searchTermEntry.text()
@@ -256,6 +307,7 @@ class App(QMainWindow):
 
         # Season and episode
         elif (self.ui.seasonCheck.isChecked() and self.ui.seasonCheck.isEnabled()) and (self.ui.episodeCheck.isChecked() and self.ui.episodeCheck.isEnabled()):
+            print("Season and episode")
             season_query = self.ui.seasonSpin.text()
             episode_query = self.ui.episodeSpin.text()
 
@@ -268,6 +320,7 @@ class App(QMainWindow):
 
         # Season And Serch Term
         elif (self.ui.searchTermCheck.isChecked() and self.ui.searchTermCheck.isEnabled()) and (self.ui.seasonCheck.isChecked() and self.ui.seasonCheck.isEnabled()):
+            print("Season And Serch Term")
             term_query = self.ui.searchTermEntry.text()
             season_query = self.ui.seasonSpin.text()
 
@@ -280,6 +333,8 @@ class App(QMainWindow):
 
         # Season
         elif self.ui.seasonCheck.isChecked() and self.ui.seasonCheck.isEnabled():
+
+            print("Season")
             season_query = self.ui.seasonSpin.text()
 
             query_dict = self.search_for(query_season=season_query, sort_value=sort_key)
@@ -291,6 +346,8 @@ class App(QMainWindow):
 
         # Search Term, All
         elif (self.ui.searchTermCheck.isChecked() and self.ui.searchTermCheck.isEnabled()) and (self.ui.displayAllCheck.isChecked() and self.ui.displayAllCheck.isEnabled()):
+
+            print("Search term and all")
             term_query = self.ui.searchTermEntry.text()
 
             query_dict = self.search_for(query_term=term_query, sort_value=sort_key)
@@ -302,6 +359,8 @@ class App(QMainWindow):
 
         # Search Term Only
         elif self.ui.searchTermCheck.isChecked() and self.ui.searchTermCheck.isEnabled():
+
+            print("Search Term Only")
             term_query = self.ui.searchTermEntry.text()
 
             query_dict = self.search_for(query_term=term_query, sort_value=sort_key)
@@ -313,8 +372,8 @@ class App(QMainWindow):
 
 
         # All
-        elif self.ui.displayAllCheck.isChecked() and self.ui.displayAllCheck.isEnabled():
-
+        elif self.ui.displayAllCheck.isChecked() and self.ui.displayAllCheck.isEnabled() and not self.ui.searchTermCheck.isChecked():
+            print("All")
             query_dict = self.search_for(all=True, sort_value=sort_key)
 
             # Clear all table rows and display results
@@ -323,6 +382,7 @@ class App(QMainWindow):
                 self.displayResultOnTable(found_torrent_list, on_table=table)
 
         else:
+            print("else, all")
             query_dict = self.search_for(all=True, sort_value=sort_key)
 
             # Clear all table rows and display results
@@ -361,7 +421,16 @@ class App(QMainWindow):
         if self.ui.searchForCombo.currentText() == "TV-Show":
             _open = menu.addAction("Open in Bittorren Client")
             menu.addSeparator()
+        elif self.ui.searchForCombo.currentText() == "Movie":
+            _open = menu.addAction("Open in Bittorren Client")
+            menu.addSeparator()
+        elif self.ui.searchForCombo.currentText() == "Anime":
+            _open = menu.addAction("Open in Bittorren Client")
+            menu.addSeparator()
         elif self.ui.searchForCombo.currentText() == "Subtitles":
+            _open = menu.addAction("Open in Bittorren Client")
+            menu.addSeparator()
+        elif self.ui.searchForCombo.currentText() == "All Categories":
             _open = menu.addAction("Open in Bittorren Client")
             menu.addSeparator()
         
@@ -388,26 +457,40 @@ class App(QMainWindow):
 
             webbrowser.open_new_tab(magnet_link)
 
+            ## Move Spin-Box episode by one value up and higlight
+            self.ui.episodeSpin.setValue(self.ui.episodeSpin.value()+1)
+            self.ui.episodeSpin.selectAll()
+
     def showMoreInfo(self):
 
         print("show more info")
 
+        ## Get the current title
         with open(resultPath, "r") as resultsFo:
-           resultsDict = json.load(resultsFo)
-           current_title = resultsDict["0"][0].lower().replace(" ", "-")
-        
-        with open(ref_Path, "r") as refFo:
-           referenceDict = json.load(refFo)
-           lis = referenceDict[current_title]
-           title = current_title
-           title_ID = lis[1]
+            resultsDict = json.load(resultsFo)
+            current_title = resultsDict["0"][0].lower().replace(" ", "-")
 
-        url = f"https://eztv.io/shows/{title_ID}/{title}/"
-        image_url = f"https://eztv.io/ezimg/thumbs/{title}-{title_ID}.jpg"
-        print(title_ID, title)
+        try:
 
-        webbrowser.open_new(url)
-    
+            with open(ref_Path, "r") as refFo:
+               referenceDict = json.load(refFo)
+               lis = referenceDict[current_title]
+               title = current_title
+               title_ID = lis[1]
+
+            url = f"https://eztv.io/shows/{title_ID}/{title}/"
+            image_url = f"https://eztv.io/ezimg/thumbs/{title}-{title_ID}.jpg"
+            print(title_ID, title)
+            webbrowser.open_new(url)
+        except KeyError:
+            print("Cant find the title on the local reference, opening google and imdb...")
+
+            google_url = f"https://google.com/search?&q={current_title}"
+            imdb_url = f"https://www.imdb.com/search/title/?title={current_title}"
+
+            webbrowser.open_new(google_url)
+            webbrowser.open_new(imdb_url)
+
     def downloadAdditionalInfo(self, url):
 
         info_dictionary = {}
@@ -565,8 +648,6 @@ class App(QMainWindow):
             final_list = [literal_eval(i) for i in sorted_dict.keys()]
 
         return final_list
-
-
 
     def message(self, message_text, message_type="INFO"):
         message_text = message_text.title()
