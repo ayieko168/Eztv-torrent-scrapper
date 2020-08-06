@@ -428,6 +428,8 @@ class Ui_MainWindow(object):
         self.horizontalLayout_13 = QtWidgets.QHBoxLayout(self.page_7)
         self.horizontalLayout_13.setObjectName("horizontalLayout_13")
         self.loggingConsole = QtWidgets.QTextBrowser(self.page_7)
+        self.loggingConsole.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
+        self.loggingConsole.setReadOnly(True)
         self.loggingConsole.setObjectName("loggingConsole")
         self.horizontalLayout_13.addWidget(self.loggingConsole)
         self.verticalLayout_11 = QtWidgets.QVBoxLayout()
@@ -437,6 +439,9 @@ class Ui_MainWindow(object):
         self.backButton = QtWidgets.QPushButton(self.page_7)
         self.backButton.setObjectName("backButton")
         self.verticalLayout_11.addWidget(self.backButton)
+        self.clearButton = QtWidgets.QPushButton(self.page_7)
+        self.clearButton.setObjectName("clearButton")
+        self.verticalLayout_11.addWidget(self.clearButton)
         spacerItem6 = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         self.verticalLayout_11.addItem(spacerItem6)
         self.autoScroll = QtWidgets.QCheckBox(self.page_7)
@@ -496,7 +501,7 @@ class Ui_MainWindow(object):
         self.searchForCombo.setItemText(1, _translate("MainWindow", "Movie"))
         self.searchForCombo.setItemText(2, _translate("MainWindow", "Anime"))
         self.searchForCombo.setItemText(3, _translate("MainWindow", "Subtitles"))
-        self.searchForCombo.setItemText(4, _translate("MainWindow", "All Categories"))
+        self.searchForCombo.setItemText(4, _translate("MainWindow", "General"))
         self.label_7.setText(_translate("MainWindow", "Scrape from : "))
         self.scraperCombo.setToolTip(_translate("MainWindow", "The site where I should look for torrents from."))
         self.scraperCombo.setItemText(0, _translate("MainWindow", "EZTV"))
@@ -574,6 +579,7 @@ class Ui_MainWindow(object):
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8.25pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Welcome</p></body></html>"))
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>"))
         self.backButton.setText(_translate("MainWindow", "Back"))
+        self.clearButton.setText(_translate("MainWindow", "Clear"))
         self.autoScroll.setText(_translate("MainWindow", "Auto Scroll"))

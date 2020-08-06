@@ -2,11 +2,12 @@ import urllib.request
 from bs4 import BeautifulSoup
 import json
 from ast import literal_eval
-import sys, time, re, string, multiprocessing
+import sys, time, re, string, multiprocessing, datetime
 import operator, webbrowser
-from PyQt5.QtCore import QPoint, pyqtSlot
+from PyQt5.QtCore import QPoint, pyqtSlot, QThreadPool, QRunnable, QObject, pyqtSignal
 from PyQt5.QtWidgets import QMainWindow, QHeaderView, QMessageBox, QTableWidgetItem, QApplication, QMenu
-from PyQt5 import QtGui, QtCore
+from PyQt5.QtGui import QTextCursor
+# from PyQt5 import QtGui, QtCore
 from utils.design_files.MainDesign import *
 from utils.resources import torrent_scrapers
 from collections import OrderedDict
@@ -33,15 +34,20 @@ class App(QMainWindow):
         
         ## Variables
         self.changed = False
+        self.threadpool = QThreadPool()
+
 
         ## Connections
         self.ui.titleCombo.addItems(self.getTitles())
-        self.ui.getDataButton.clicked.connect(self.getDataCMD)
+        # self.ui.getDataButton.clicked.connect(self.getDataCMD)
+        self.ui.getDataButton.clicked.connect(self.get_data_cmd)
         self.ui.searchButton.clicked.connect(self.searchCMD)
         self.ui.moreInfoButton.clicked.connect(self.showMoreInfo)
         self.ui.searchForCombo.currentIndexChanged.connect(self.change_scrapers_in_combo)
         self.ui.scraperCombo.currentIndexChanged.connect(self.make_scaper_combo_changes)
         self.ui.showStatusCheck.clicked.connect(self.show_status_callback)
+        self.ui.clearButton.clicked.connect(lambda: self.ui.loggingConsole.clear())
+        self.ui.backButton.clicked.connect(lambda: self.ui.stackedWidget_2.setCurrentIndex(0))
 
         ## SETUP TABLES
         for table in [self.ui.showResutlTable, self.ui.moviesResutlTable, self.ui.animeResutlTable, self.ui.subtitleResutlTable]:
@@ -129,11 +135,50 @@ class App(QMainWindow):
             self.ui.scraperCombo.addItems(subs_scrapers)
             self.ui.titleEdit.setPlaceholderText("Enter Subtitle Title")
 
-    def getDataCMD(self):
+    def finished_collecting_torrents(self):
+
+        ## Disable Buttons
+        self.ui.getDataButton.setEnabled(True)
+        self.ui.searchButton.setEnabled(True)
+
+        ## Move back to results view
+        self.ui.stackedWidget_2.setCurrentIndex(0)
+        self.ui.showStatusCheck.setChecked(False)
+
+    def data_logger(self, sender, message):
+
+        _time = datetime.datetime.now().strftime("%H:%M:%S")
+        log_text = f">>> [{_time}] [{sender.upper().strip()}] ==> {str(message).title().strip()}\n"
+
+        if self.ui.autoScroll.isChecked():
+            self.ui.loggingConsole.moveCursor(QTextCursor.End)
+            self.ui.loggingConsole.insertPlainText(log_text)
+        else:
+            self.ui.loggingConsole.insertPlainText(log_text)
+
+    def get_data_cmd(self):
+
+        ## Disable Buttons
+        self.ui.getDataButton.setEnabled(False)
+        self.ui.searchButton.setEnabled(False)
+
+        ## Move to the logging view
+        self.ui.stackedWidget_2.setCurrentIndex(1)
+        self.ui.showStatusCheck.setChecked(True)
+
+        ## Set the auto scroll to true
+        self.ui.autoScroll.setChecked(True)
+
+        worker = Worker(self.getDataCMD)
+        worker.signals.message_signal.connect(self.message)
+        worker.signals.log_data.connect(self.data_logger)
+        worker.signals.finished.connect(self.finished_collecting_torrents)
+        self.threadpool.start(worker)
+
+    def getDataCMD(self, signals):
         """command that downloads the <title> torrent info and writes it to a json file as a search reference"""
 
         return_code = False
-        gui_widgets = {'console': self.ui.loggingConsole, 'auto-scroll': self.ui.autoScroll, 'print-output': self.ui.showStatusCheck}
 
         ## Get title references for local db
         with open('utils/resources/result.json', 'r') as resutlsFO:
@@ -158,11 +203,14 @@ class App(QMainWindow):
         ## check if the title you want to search is the one in the current local db
         if results_dictionary != {}:
             if (title == results_dictionary["0"][0]) and (not self.changed):
-                rc = self.message("This title is already scraped, Do you want to scrape again?", message_type='ASK')
-                if rc == QMessageBox.Yes:
-                    pass
-                elif rc == QMessageBox.No:
-                    return
+                x = signals.message_signal.emit("This title is already scraped, Do you want to scrape again?")
+                print("value of x = ", x)
+                return
+                # rc = self.message("This title is already scraped, Do you want to scrape again?", message_type='ASK')
+                # if rc == QMessageBox.Yes:
+                #     pass
+                # elif rc == QMessageBox.No:
+                #     return
 
         ## Check for the selected scraper
         requested_scraper = self.ui.scraperCombo.currentText().lower()
@@ -175,34 +223,34 @@ class App(QMainWindow):
             if title in eztv_reference_dictionary.keys():
                 print("using id")
                 title_eztv_id = int(eztv_reference_dictionary[title][1])
-                torrents_dictionary , torrents_count, return_code = torrent_scrapers.eztv_scraper(ez_id=title_eztv_id, gui_widgets=gui_widgets)
+                torrents_dictionary, torrents_count, return_code = torrent_scrapers.eztv_scraper(ez_id=title_eztv_id, signals=signals)
 
             else:
                 print("using title")
-                torrents_dictionary, torrents_count, return_code = torrent_scrapers.eztv_scraper(movie_title=title, gui_widgets=gui_widgets)
+                torrents_dictionary, torrents_count, return_code = torrent_scrapers.eztv_scraper(movie_title=title, signals=signals)
 
         elif requested_scraper == 'kickass' and self.ui.searchForCombo.currentText().lower() == "tv-show":
 
             print("use kickass tv show")
-            torrents_dictionary, torrents_count, return_code = torrent_scrapers.kick_ass_scraper_tv(movie_title=title, gui_widgets=gui_widgets)
+            torrents_dictionary, torrents_count, return_code = torrent_scrapers.kick_ass_scraper_tv(movie_title=title, signals=signals)
 
         elif requested_scraper == 'kickass' and self.ui.searchForCombo.currentText().lower() == "anime":
 
             print("use kickass anime")
-            torrents_dictionary, torrents_count, return_code = torrent_scrapers.kick_ass_scraper_anime(movie_title=title, gui_widgets=gui_widgets)
+            torrents_dictionary, torrents_count, return_code = torrent_scrapers.kick_ass_scraper_anime(movie_title=title, signals=signals)
 
         elif requested_scraper == "nyaa":
             print("use nyaa anime")
-            torrents_dictionary, torrents_count, return_code = torrent_scrapers.nyaa_scraper(movie_title=title, gui_widgets=gui_widgets)
+            torrents_dictionary, torrents_count, return_code = torrent_scrapers.nyaa_scraper(movie_title=title, signals=signals)
 
         elif requested_scraper.lower() == 'Anime Tosho'.lower():
             print("use Anime Tosho")
-            torrents_dictionary, torrents_count, return_code = torrent_scrapers.anime_tosho_scraper(movie_title=title, gui_widgets=gui_widgets)
+            torrents_dictionary, torrents_count, return_code = torrent_scrapers.anime_tosho_scraper(movie_title=title, signals=signals)
 
         elif requested_scraper.lower() == "YIFI".lower():
 
             print("use YIFY Movies")
-            torrents_dictionary, torrents_count, return_code = torrent_scrapers.yify_movie_scraper(movie_title=title, gui_widgets=gui_widgets)
+            torrents_dictionary, torrents_count, return_code = torrent_scrapers.yify_movie_scraper(movie_title=title, signals=signals)
 
         elif requested_scraper.lower() == "All Sites".lower():
             print("Gathering torrents from all the sites")
@@ -213,7 +261,9 @@ class App(QMainWindow):
                 pass
 
         else:
-            self.message("It seams the scraper you selected is not yet functional, please select another")
+
+            signals.message_signal.emit("It seams the scraper you selected is not yet functional, please select another")
+            # self.message("It seams the scraper you selected is not yet functional, please select another")
             return
 
         ## Process the returned torrent data
@@ -225,7 +275,8 @@ class App(QMainWindow):
                 json.dump(torrents_dictionary, result_fo, indent=2)
 
             ## Give successfull message box
-            self.message(f"The scrape was successful. Found {torrents_count} torrent. Thank ayieko168 latter! ")
+            # self.message(f"The scrape was successful. Found {torrents_count} torrent. Thank ayieko168 latter! ")
+            signals.message_signal.emit(f"The scrape was successful. Found {torrents_count} torrent. Thank ayieko168 latter! ")
 
             ## Rename the 'current database' label
             try:
@@ -251,14 +302,14 @@ class App(QMainWindow):
         if return_code == False:
 
             ## Give runtime error message box
-            self.message("There was a problem during the scrape")
+            # self.message("There was a problem during the scrape")
+            signals.message_signal.emit("There was a problem during the scrape")
         
         ## Change the scraper combo variable
         self.changed = False
 
-        ## Enable Disabled Buttons
-        self.ui.getDataButton.setEnabled(True)
-        self.ui.searchButton.setEnabled(True)
+        ## Emit the finished signal
+        signals.finished.emit()
 
     def displayResultOnTable(self, torrent_dictionary, on_table):
 
@@ -675,6 +726,34 @@ class App(QMainWindow):
             msgBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
             returnValue = msgBox.exec()
             return returnValue
+
+
+class Worker(QRunnable):
+
+    def __init__(self, func, *args, **kwargs):
+
+        super(Worker, self).__init__()
+
+        self.func = func
+        self.args = args
+        self.kwargs = kwargs
+        self.signals = WorkerSignals()
+
+    @pyqtSlot()
+    def run(self):
+
+        print("geting data...")
+        self.func(self.signals)
+        print("done.")
+
+
+
+class WorkerSignals(QObject):
+
+    finished = pyqtSignal()
+    log_data = pyqtSignal(object, object)
+    message_signal = pyqtSignal(object)
+
 
 
 if __name__ == "__main__":
