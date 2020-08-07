@@ -1,4 +1,0 @@
-pyqt5
-beautifulsoup4
-requests-html
-
