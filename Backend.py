@@ -188,10 +188,12 @@ class App(QMainWindow):
 
         ## Ensure there is a query title
         if (self.ui.titleEdit.text() == '') and (self.ui.enterCheck.isChecked()):
-            self.message("Please Enter a Search title. Try Game Of Thrones :)", "INFO")
+            signals.message_signal.emit("Please Enter a Search title. Try Game Of Thrones :)")
+            self.finished_collecting_torrents()
             return
         if (self.ui.titleCombo.currentText() == 'Select A Title...') and (self.ui.chooseCheck.isChecked()):
-            self.message("Please Enter a Search title. Try Game Of Thrones :)", "INFO")
+            signals.message_signal.emit("Please Enter a Search title. Try Game Of Thrones :)")
+            self.finished_collecting_torrents()
             return
 
         ## Get the current search title (the previously searched title)
