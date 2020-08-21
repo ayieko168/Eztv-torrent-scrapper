@@ -24,6 +24,7 @@ elif sys.platform == "linux":
     # ref_Path = "./utils/resources/ref_.json"
     ref_Path = "utils/resources/EZTV_RFERENCE_DICTIONARY.json"
 
+
 class App(QMainWindow):
 
     def __init__(self):
@@ -48,6 +49,11 @@ class App(QMainWindow):
         self.ui.showStatusCheck.clicked.connect(self.show_status_callback)
         self.ui.clearButton.clicked.connect(lambda: self.ui.loggingConsole.clear())
         self.ui.backButton.clicked.connect(lambda: self.ui.stackedWidget_2.setCurrentIndex(0))
+        self.ui.showResutlTable.cellDoubleClicked.connect(self.double_click_handler)
+        self.ui.moviesResutlTable.cellDoubleClicked.connect(self.double_click_handler)
+        self.ui.animeResutlTable.cellDoubleClicked.connect(self.double_click_handler)
+        self.ui.subtitleResutlTable.cellDoubleClicked.connect(self.double_click_handler)
+
 
         ## SETUP TABLES
         for table in [self.ui.showResutlTable, self.ui.moviesResutlTable, self.ui.animeResutlTable, self.ui.subtitleResutlTable]:
@@ -207,6 +213,7 @@ class App(QMainWindow):
             if (title == results_dictionary["0"][0]) and (not self.changed):
                 x = signals.message_signal.emit("This title is already scraped, Do you want to scrape again?")
                 print("value of x = ", x)
+                self.finished_collecting_torrents()
                 return
                 # rc = self.message("This title is already scraped, Do you want to scrape again?", message_type='ASK')
                 # if rc == QMessageBox.Yes:
@@ -265,6 +272,8 @@ class App(QMainWindow):
         else:
 
             signals.message_signal.emit("It seams the scraper you selected is not yet functional, please select another")
+            signals.finished.emit()
+            self.finished_collecting_torrents()
             # self.message("It seams the scraper you selected is not yet functional, please select another")
             return
 
@@ -312,6 +321,7 @@ class App(QMainWindow):
 
         ## Emit the finished signal
         signals.finished.emit()
+        self.finished_collecting_torrents()
 
     def displayResultOnTable(self, torrent_dictionary, on_table):
 
@@ -444,6 +454,35 @@ class App(QMainWindow):
                 self.displayResultOnTable(found_torrent_list, on_table=table)
 
         w.processEvents()
+
+    def double_click_handler(self):
+
+        """Handler for double clicks on the result tables"""
+
+        w.processEvents()
+        table = QApplication.focusWidget()
+
+        def getItemData(itemIndex):
+            data = []
+
+            for i in range(table.columnCount()):
+                try:
+                    data.append(table.item(itemIndex, i).text())
+                except:
+                    pass
+
+            return data
+
+
+        item_row = table.currentIndex().row()
+        itemName = table.item(item_row, 0).text()
+        itemData = getItemData(item_row)
+
+        magnet_link = itemData[3]
+        webbrowser.open_new_tab(magnet_link)
+
+        self.ui.statusBar.showMessage(f"Openning {itemData[0]} in the torrent client...", 5000)
+
 
     @pyqtSlot(QPoint)
     def on_customContextMenuRequested(self, pos):

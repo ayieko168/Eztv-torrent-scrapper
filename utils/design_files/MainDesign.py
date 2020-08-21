@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'C:/Users/royalstate/Projects and Research/Python Projects/Eztv-torrent-scrapper/GUI/utils/design_files/MainDesign.ui'
+# Form implementation generated from reading ui file 'C:/Users/royalstate/Projects and Research/Python Projects/Eztv-torrent-scrapper/utils/design_files/MainDesign.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -320,6 +320,8 @@ class Ui_MainWindow(object):
         self.verticalLayout_5.setObjectName("verticalLayout_5")
         self.showResutlTable = QtWidgets.QTableWidget(self.page)
         self.showResutlTable.setAutoScrollMargin(6)
+        self.showResutlTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.showResutlTable.setAlternatingRowColors(True)
         self.showResutlTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.showResutlTable.setObjectName("showResutlTable")
         self.showResutlTable.setColumnCount(4)
@@ -341,6 +343,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_9.setObjectName("horizontalLayout_9")
         self.moviesResutlTable = QtWidgets.QTableWidget(self.page_2)
         self.moviesResutlTable.setAutoScrollMargin(6)
+        self.moviesResutlTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.moviesResutlTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.moviesResutlTable.setObjectName("moviesResutlTable")
         self.moviesResutlTable.setColumnCount(4)
@@ -362,6 +365,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_6.setObjectName("verticalLayout_6")
         self.animeResutlTable = QtWidgets.QTableWidget(self.page_3)
         self.animeResutlTable.setAutoScrollMargin(6)
+        self.animeResutlTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.animeResutlTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.animeResutlTable.setObjectName("animeResutlTable")
         self.animeResutlTable.setColumnCount(4)
@@ -383,6 +387,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_7.setObjectName("verticalLayout_7")
         self.subtitleResutlTable = QtWidgets.QTableWidget(self.page_4)
         self.subtitleResutlTable.setAutoScrollMargin(6)
+        self.subtitleResutlTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.subtitleResutlTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.subtitleResutlTable.setObjectName("subtitleResutlTable")
         self.subtitleResutlTable.setColumnCount(4)
@@ -404,6 +409,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_9.setObjectName("verticalLayout_9")
         self.searchAllTable = QtWidgets.QTableWidget(self.page_5)
         self.searchAllTable.setAutoScrollMargin(6)
+        self.searchAllTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.searchAllTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.searchAllTable.setObjectName("searchAllTable")
         self.searchAllTable.setColumnCount(4)

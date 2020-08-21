@@ -920,6 +920,12 @@
                     <property name="autoScrollMargin">
                      <number>6</number>
                     </property>
+                    <property name="editTriggers">
+                     <set>QAbstractItemView::NoEditTriggers</set>
+                    </property>
+                    <property name="alternatingRowColors">
+                     <bool>true</bool>
+                    </property>
                     <property name="selectionBehavior">
                      <enum>QAbstractItemView::SelectRows</enum>
                     </property>
@@ -956,6 +962,12 @@
                    <widget class="QTableWidget" name="moviesResutlTable">
                     <property name="autoScrollMargin">
                      <number>6</number>
+                    </property>
+                    <property name="editTriggers">
+                     <set>QAbstractItemView::NoEditTriggers</set>
+                    </property>
+                    <property name="alternatingRowColors">
+                     <bool>true</bool>
                     </property>
                     <property name="selectionBehavior">
                      <enum>QAbstractItemView::SelectRows</enum>
@@ -994,6 +1006,12 @@
                     <property name="autoScrollMargin">
                      <number>6</number>
                     </property>
+                    <property name="editTriggers">
+                     <set>QAbstractItemView::NoEditTriggers</set>
+                    </property>
+                    <property name="alternatingRowColors">
+                     <bool>true</bool>
+                    </property>
                     <property name="selectionBehavior">
                      <enum>QAbstractItemView::SelectRows</enum>
                     </property>
@@ -1031,6 +1049,12 @@
                     <property name="autoScrollMargin">
                      <number>6</number>
                     </property>
+                    <property name="editTriggers">
+                     <set>QAbstractItemView::NoEditTriggers</set>
+                    </property>
+                    <property name="alternatingRowColors">
+                     <bool>true</bool>
+                    </property>
                     <property name="selectionBehavior">
                      <enum>QAbstractItemView::SelectRows</enum>
                     </property>
@@ -1067,6 +1091,12 @@
                    <widget class="QTableWidget" name="searchAllTable">
                     <property name="autoScrollMargin">
                      <number>6</number>
+                    </property>
+                    <property name="editTriggers">
+                     <set>QAbstractItemView::NoEditTriggers</set>
+                    </property>
+                    <property name="alternatingRowColors">
+                     <bool>true</bool>
                     </property>
                     <property name="selectionBehavior">
                      <enum>QAbstractItemView::SelectRows</enum>
