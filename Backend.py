@@ -2,10 +2,10 @@ import urllib.request
 from bs4 import BeautifulSoup
 import json
 from ast import literal_eval
-import sys, time, re, string, multiprocessing, datetime
+import sys, time, re, string, multiprocessing, datetime, os
 import operator, webbrowser
 from PyQt5.QtCore import QPoint, pyqtSlot, QThreadPool, QRunnable, QObject, pyqtSignal
-from PyQt5.QtWidgets import QMainWindow, QHeaderView, QMessageBox, QTableWidgetItem, QApplication, QMenu
+from PyQt5.QtWidgets import QMainWindow, QHeaderView, QMessageBox, QTableWidgetItem, QApplication, QMenu, QLabel
 from PyQt5.QtGui import QTextCursor
 # from PyQt5 import QtGui, QtCore
 from utils.design_files.MainDesign import *
@@ -18,7 +18,7 @@ if (sys.platform == "win32") or (sys.platform == "cygwin"):
     EZTV_RFERENCE_DICTIONARYPath = "utils\\resources\\EZTV_RFERENCE_DICTIONARY.json"
     ref_Path = "utils\\resources\\ref_.json"
 elif sys.platform == "linux":
-    print("plartform is linux")
+    # print("plartform is linux")
     resultPath = "./utils/resources/result.json"
     EZTV_RFERENCE_DICTIONARYPath = "./utils/resources/EZTV_RFERENCE_DICTIONARY.json"
     # ref_Path = "./utils/resources/ref_.json"
@@ -37,9 +37,11 @@ class App(QMainWindow):
         self.changed = False
         self.threadpool = QThreadPool()
 
+        ## Configurations
+        self.ui.titleCombo.addItems(self.getTitles())
+        self.configure_custom_widgets()
 
         ## Connections
-        self.ui.titleCombo.addItems(self.getTitles())
         # self.ui.getDataButton.clicked.connect(self.getDataCMD)
         self.ui.getDataButton.clicked.connect(self.get_data_cmd)
         self.ui.searchButton.clicked.connect(self.searchCMD)
@@ -68,7 +70,71 @@ class App(QMainWindow):
         ## get the current database title and set the "dataNameLable"
         self.get_current_db_title()
 
+    def configure_custom_widgets(self):
+        """ A function used to setup custom widgets that are not in the ui file.
+            It is called at the start of the app.
+        """
+
+        ## Setup Custom Widgets
+        self.c = DropSignals()
+        self.c.dropped_signal.connect(self.drop_handler_caller)
+        self.sub_drop_label = CustomLabel(self.ui.page_4, self.c)
+        self.sub_drop_label.setMinimumSize(QtCore.QSize(111, 0))
+        self.sub_drop_label.setMaximumSize(QtCore.QSize(111, 16777215))
+        self.sub_drop_label.setFrameShape(QtWidgets.QFrame.Box)
+        self.sub_drop_label.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.sub_drop_label.setLineWidth(2)
+        self.sub_drop_label.setWordWrap(True)
+        self.sub_drop_label.setObjectName("sub_drop_label")
+        self.ui.horizontalLayout_14.addWidget(self.sub_drop_label)
+
+    def drop_handler(self, h, signals):
+        """Function executed by subtitle workers"""
+
+        dropped_file_path = QtCore.QUrl.toLocalFile(h)
+
+        if os.path.isfile(dropped_file_path):
+            self.data_logger(message=f"Dropped the file :: {os.path.basename(dropped_file_path)} to subtitle purser")
+            self.sub_drop_label.setText(f"<html><head/><body><p align=\"center\">GETTING FILE INFO FOR FILE :: {os.path.basename(dropped_file_path)} ......</p></body></html>")
+
+            ## Call the scrapper method
+            torrents_dictionary, torrents_count, return_code = torrent_scrapers.open_subs_scraper(signals=signals, movie_path=dropped_file_path, directory=False)
+
+            if return_code == True:
+                self.ui.subtitleResutlTable.setRowCount(0)
+                for values in torrents_dictionary.values():
+                    self.displayResultOnTable(values, on_table=self.ui.subtitleResutlTable)
+        else:
+            answer = self.message(message_type='ask', message_text="You have dropped a whole folder, do you want to get subtitles for all files in this folder?")
+
+            if answer == 16384:  # yes
+                self.data_logger(message=f"Getting subtitles for all files in {os.path.basename(dropped_file_path)}")
+                self.sub_drop_label.setText(f"<html><head/><body><p align=\"center\">GETTING FILES FROM :: {os.path.basename(dropped_file_path)} ......</p></body></html>")
+
+                ## Call the scrapper method
+                torrents_dictionary, torrents_count, return_code = torrent_scrapers.open_subs_scraper(signals=signals, movie_path=dropped_file_path, directory=True)
+
+                if return_code == True:
+                    self.ui.subtitleResutlTable.setRowCount(0)
+                    for values in torrents_dictionary.values():
+                        self.displayResultOnTable(values, on_table=self.ui.subtitleResutlTable)
+            else:
+                self.data_logger(message=f"Ignoring File drop.")
+
+        self.data_logger(message=f"Done with all subtitle drop operations")
+        self.sub_drop_label.setText("<html><head/><body><p align=\"center\"><strong>OR</strong></p><p align=\"center\">DRAG AND DROP THE MOVIE FILE HERE...</p></body></html>")
+
+    def drop_handler_caller(self, h):
+        """Function called when a drop event is realized on the subtitle label"""
+
+        worker = SubDropWorker(self.drop_handler, h)
+        worker.signals.message_signal.connect(self.message)
+        worker.signals.log_data.connect(self.data_logger)
+        worker.signals.finished.connect(self.finished_collecting_torrents)
+        self.threadpool.start(worker)
+
     def show_status_callback(self):
+        """This function handles the switching of visible tabs when the 'show status' check is set or not"""
 
         if self.ui.showStatusCheck.isChecked():
             self.ui.stackedWidget_2.setCurrentIndex(1)
@@ -76,10 +142,12 @@ class App(QMainWindow):
             self.ui.stackedWidget_2.setCurrentIndex(0)
 
     def make_scaper_combo_changes(self):
+        """This helps keep track of changes in the 'scrape for' combo box"""
 
         self.changed = True
 
     def get_current_db_title(self):
+        """This function gets the current movie title on the local database and is used to set the 'current database' label text"""
 
         try:
             with open(resultPath) as titlesOb:
@@ -99,16 +167,17 @@ class App(QMainWindow):
         return titles
 
     def change_scrapers_in_combo(self):
+        """This function changes the scraper options available for use when changing the 'scrape for' combo box options"""
 
         if self.ui.searchForCombo.currentText().lower() == "TV-Show".lower():
-            print("change to tv show scrapers")
+            self.data_logger("application", "change to tv show scrapers")
             tv_scrapers = ['EZTV', 'Kickass', 'The Pirate Bay', 'All Sites']
             self.ui.scraperCombo.clear()
             self.ui.scraperCombo.addItems(tv_scrapers)
             self.ui.titleEdit.setPlaceholderText("Enter Tv-Show Title")
 
         elif self.ui.searchForCombo.currentText().lower() == "Movie".lower():
-            print("change to movie scrapers")
+            self.data_logger("application", "change to movie scrapers")
             movie_scrapers = ['YIFI', 'Kickass', 'The Pirate Bay', 'All Sites']
             self.ui.scraperCombo.clear()
             self.ui.scraperCombo.addItems(movie_scrapers)
@@ -118,7 +187,7 @@ class App(QMainWindow):
                 self.ui.displayAllCheck.click()
 
         elif self.ui.searchForCombo.currentText().lower() == "Anime".lower():
-            print("change to anime scrapers")
+            self.data_logger("application", "change to anime scrapers")
             anime_scrapers = ['Nyaa', 'Anime Tosho', 'Kickass', 'All Sites']
             self.ui.scraperCombo.clear()
             self.ui.scraperCombo.addItems(anime_scrapers)
@@ -128,20 +197,32 @@ class App(QMainWindow):
                 self.ui.displayAllCheck.click()
 
         elif self.ui.searchForCombo.currentText().lower() == "Subtitles".lower():
-            print("change to subs sracpers")
+            self.data_logger("application", "change to subs sracpers")
             subs_scrapers = ['Open Subs', 'YIFI Subs', 'Tv Subs .com', 'Tv Subs .net', 'All Sites']
             self.ui.scraperCombo.clear()
             self.ui.scraperCombo.addItems(subs_scrapers)
             self.ui.titleEdit.setPlaceholderText("Enter Subtitle Title")
 
         elif self.ui.searchForCombo.currentText().lower() == "All Categories".lower():
-            print("change to all torrent sracpers")
+            self.data_logger("application", "change to all torrent sracpers")
             subs_scrapers = ['Kickass', 'The Pirate Bay', 'Torrent Galaxy', 'RARBG get', '1337x', 'All Sites']
             self.ui.scraperCombo.clear()
             self.ui.scraperCombo.addItems(subs_scrapers)
             self.ui.titleEdit.setPlaceholderText("Enter Subtitle Title")
 
+        if self.ui.searchForCombo.currentText().lower() == "Subtitles".lower():
+            self.ui.enterCheck.setEnabled(False)
+            self.ui.chooseCheck.setEnabled(False)
+            self.ui.titleEdit.setEnabled(False)
+            self.ui.titleCombo.setEnabled(False)
+        else:
+            self.ui.enterCheck.setEnabled(True)
+            self.ui.chooseCheck.setEnabled(True)
+            self.ui.titleEdit.setEnabled(True)
+            self.ui.titleCombo.setEnabled(True)
+
     def finished_collecting_torrents(self):
+        """This method is used to re-enable the disabled widgets that were disabled during a data acquisition operation """
 
         ## Disable Buttons
         self.ui.getDataButton.setEnabled(True)
@@ -151,7 +232,8 @@ class App(QMainWindow):
         self.ui.stackedWidget_2.setCurrentIndex(0)
         self.ui.showStatusCheck.setChecked(False)
 
-    def data_logger(self, sender, message):
+    def data_logger(self, sender="application", message=""):
+        """This function loggs data to the logging text widget and also the logging file"""
 
         _time = datetime.datetime.now().strftime("%H:%M:%S")
         log_text = f">>> [{_time}] [{sender.upper().strip()}] ==> {str(message).title().strip()}\n"
@@ -163,7 +245,7 @@ class App(QMainWindow):
             self.ui.loggingConsole.insertPlainText(log_text)
 
     def get_data_cmd(self):
-
+        """This is the function that is called when the 'Get Data' button is pressed"""
         ## Disable Buttons
         self.ui.getDataButton.setEnabled(False)
         self.ui.searchButton.setEnabled(False)
@@ -182,7 +264,8 @@ class App(QMainWindow):
         self.threadpool.start(worker)
 
     def getDataCMD(self, signals):
-        """command that downloads the <title> torrent info and writes it to a json file as a search reference"""
+        """Command that downloads the <title> torrent info and writes it to a json file as a search reference.
+            This function is what is used by the get data workers and is not directly called by the get data button"""
 
         return_code = False
 
@@ -212,7 +295,7 @@ class App(QMainWindow):
         if results_dictionary != {}:
             if (title == results_dictionary["0"][0]) and (not self.changed):
                 x = signals.message_signal.emit("This title is already scraped, Do you want to scrape again?")
-                print("value of x = ", x)
+                # print("value of x = ", x)
                 self.finished_collecting_torrents()
                 return
                 # rc = self.message("This title is already scraped, Do you want to scrape again?", message_type='ASK')
@@ -230,39 +313,50 @@ class App(QMainWindow):
 
             # check if the title is in the eztv reference, if it is there us its eztv id to do the search
             if title in eztv_reference_dictionary.keys():
-                print("using id")
+                signals.log_data.emit("application[eztv]", "Using ID")
+                # print("using id")
                 title_eztv_id = int(eztv_reference_dictionary[title][1])
                 torrents_dictionary, torrents_count, return_code = torrent_scrapers.eztv_scraper(ez_id=title_eztv_id, signals=signals)
 
             else:
-                print("using title")
+                signals.log_data.emit("application[eztv]", "Using title")
+                # print("using title")
                 torrents_dictionary, torrents_count, return_code = torrent_scrapers.eztv_scraper(movie_title=title, signals=signals)
 
         elif requested_scraper == 'kickass' and self.ui.searchForCombo.currentText().lower() == "tv-show":
 
-            print("use kickass tv show")
+            signals.log_data.emit("application[kickass]", "Using Kickass Tv")
+            # print("use kickass tv show")
             torrents_dictionary, torrents_count, return_code = torrent_scrapers.kick_ass_scraper_tv(movie_title=title, signals=signals)
 
         elif requested_scraper == 'kickass' and self.ui.searchForCombo.currentText().lower() == "anime":
 
-            print("use kickass anime")
+            signals.log_data.emit("application[kickass]", "Using Kickass Anime")
+            # print("use kickass anime")
             torrents_dictionary, torrents_count, return_code = torrent_scrapers.kick_ass_scraper_anime(movie_title=title, signals=signals)
 
         elif requested_scraper == "nyaa":
-            print("use nyaa anime")
+
+            signals.log_data.emit("application[nyaa]", "Using Nyaa")
+            # print("use nyaa anime")
             torrents_dictionary, torrents_count, return_code = torrent_scrapers.nyaa_scraper(movie_title=title, signals=signals)
 
         elif requested_scraper.lower() == 'Anime Tosho'.lower():
-            print("use Anime Tosho")
+
+            signals.log_data.emit("application[AnimeTosho]", "Using Anime Tosho")
+            # print("use Anime Tosho")
             torrents_dictionary, torrents_count, return_code = torrent_scrapers.anime_tosho_scraper(movie_title=title, signals=signals)
 
         elif requested_scraper.lower() == "YIFI".lower():
 
-            print("use YIFY Movies")
+            signals.log_data.emit("application[YIFY]", "Using YIFY movies")
+            # print("use YIFY Movies")
             torrents_dictionary, torrents_count, return_code = torrent_scrapers.yify_movie_scraper(movie_title=title, signals=signals)
 
         elif requested_scraper.lower() == "All Sites".lower():
-            print("Gathering torrents from all the sites")
+
+            signals.log_data.emit("application[ALL-scrapers]", "Using a general search engine")
+            # print("Gathering torrents from all the sites")
 
             # Get the search category
             if self.ui.searchForCombo.currentText().lower() == "TV-Show":
@@ -315,6 +409,8 @@ class App(QMainWindow):
             ## Give runtime error message box
             # self.message("There was a problem during the scrape")
             signals.message_signal.emit("There was a problem during the scrape")
+            signals.finished.emit()
+            self.finished_collecting_torrents()
         
         ## Change the scraper combo variable
         self.changed = False
@@ -324,6 +420,7 @@ class App(QMainWindow):
         self.finished_collecting_torrents()
 
     def displayResultOnTable(self, torrent_dictionary, on_table):
+        """This function displays data from <torrent_dictionary> and renders it to the <on_table> table widget"""
 
         table = on_table
 
@@ -356,7 +453,8 @@ class App(QMainWindow):
         # Season, Episode and Search Term
         if (self.ui.seasonCheck.isChecked() and self.ui.seasonCheck.isEnabled()) and (self.ui.episodeCheck.isChecked() and self.ui.episodeCheck.isEnabled()) and (self.ui.searchTermCheck.isChecked() and self.ui.searchTermCheck.isEnabled()):
 
-            print("Season, Episode and Search Term")
+            self.data_logger(message="Season, Episode and Search Term")
+            # print("Season, Episode and Search Term")
             season_query = self.ui.seasonSpin.text()
             episode_query = self.ui.episodeSpin.text()
             term_query = self.ui.searchTermEntry.text()
@@ -370,7 +468,9 @@ class App(QMainWindow):
 
         # Season and episode
         elif (self.ui.seasonCheck.isChecked() and self.ui.seasonCheck.isEnabled()) and (self.ui.episodeCheck.isChecked() and self.ui.episodeCheck.isEnabled()):
-            print("Season and episode")
+
+            self.data_logger(message="Season and episode")
+            # print("Season and episode")
             season_query = self.ui.seasonSpin.text()
             episode_query = self.ui.episodeSpin.text()
 
@@ -383,7 +483,9 @@ class App(QMainWindow):
 
         # Season And Serch Term
         elif (self.ui.searchTermCheck.isChecked() and self.ui.searchTermCheck.isEnabled()) and (self.ui.seasonCheck.isChecked() and self.ui.seasonCheck.isEnabled()):
-            print("Season And Serch Term")
+
+            self.data_logger(message="Season And Serch Term")
+            # print("Season And Serch Term")
             term_query = self.ui.searchTermEntry.text()
             season_query = self.ui.seasonSpin.text()
 
@@ -397,7 +499,8 @@ class App(QMainWindow):
         # Season
         elif self.ui.seasonCheck.isChecked() and self.ui.seasonCheck.isEnabled():
 
-            print("Season")
+            self.data_logger(message="Season Only")
+            # print("Season")
             season_query = self.ui.seasonSpin.text()
 
             query_dict = self.search_for(query_season=season_query, sort_value=sort_key)
@@ -410,7 +513,8 @@ class App(QMainWindow):
         # Search Term, All
         elif (self.ui.searchTermCheck.isChecked() and self.ui.searchTermCheck.isEnabled()) and (self.ui.displayAllCheck.isChecked() and self.ui.displayAllCheck.isEnabled()):
 
-            print("Search term and all")
+            self.data_logger(message="Search term and all")
+            # print("Search term and all")
             term_query = self.ui.searchTermEntry.text()
 
             query_dict = self.search_for(query_term=term_query, sort_value=sort_key)
@@ -423,7 +527,8 @@ class App(QMainWindow):
         # Search Term Only
         elif self.ui.searchTermCheck.isChecked() and self.ui.searchTermCheck.isEnabled():
 
-            print("Search Term Only")
+            self.data_logger(message="Search Term Only")
+            # print("Search Term Only")
             term_query = self.ui.searchTermEntry.text()
 
             query_dict = self.search_for(query_term=term_query, sort_value=sort_key)
@@ -436,7 +541,9 @@ class App(QMainWindow):
 
         # All
         elif self.ui.displayAllCheck.isChecked() and self.ui.displayAllCheck.isEnabled() and not self.ui.searchTermCheck.isChecked():
-            print("All")
+
+            self.data_logger(message="All")
+            # print("All")
             query_dict = self.search_for(all=True, sort_value=sort_key)
 
             # Clear all table rows and display results
@@ -445,7 +552,9 @@ class App(QMainWindow):
                 self.displayResultOnTable(found_torrent_list, on_table=table)
 
         else:
-            print("else, all")
+
+            self.data_logger(message="else, all")
+            # print("else, all")
             query_dict = self.search_for(all=True, sort_value=sort_key)
 
             # Clear all table rows and display results
@@ -456,7 +565,6 @@ class App(QMainWindow):
         w.processEvents()
 
     def double_click_handler(self):
-
         """Handler for double clicks on the result tables"""
 
         w.processEvents()
@@ -482,7 +590,6 @@ class App(QMainWindow):
         webbrowser.open_new_tab(magnet_link)
 
         self.ui.statusBar.showMessage(f"Openning {itemData[0]} in the torrent client...", 5000)
-
 
     @pyqtSlot(QPoint)
     def on_customContextMenuRequested(self, pos):
@@ -554,6 +661,7 @@ class App(QMainWindow):
             self.ui.episodeSpin.selectAll()
 
     def showMoreInfo(self):
+        """Handler for the 'more info' button when pressed"""
 
         print("show more info")
 
@@ -583,30 +691,9 @@ class App(QMainWindow):
             webbrowser.open_new(google_url)
             webbrowser.open_new(imdb_url)
 
-    def downloadAdditionalInfo(self, url):
-
-        info_dictionary = {}
-
-        try:
-            hdr = {"User-Agent": "Mozila/5.0"}
-            req = urllib.request.Request(url, headers=hdr)
-            page = urllib.request.urlopen(req)
-            soup = BeautifulSoup(page, "html.parser")
-        except Exception as e:
-            # print(e.args)
-            # print("CHECK YOUR INTERNET CONNECTION")
-            return 402
-        
-        td_element = soup.find("td", {"class": "show_info_banner_logo"})
-        description = td_element.find("span").text
-
-        table_element = soup.findChildren("table", {"class": "section_thread_post show_info_description"})
-        # x = table_element.text
-        
-        with open ("the_data.md", "w")as fff:
-            fff.write(str(table_element))
 
     def search_for(self, query_season=None, query_episode=None, query_term=None, sort_value='name', all=False):
+        """This function is used to get back a sorted and filtered result from the local result database"""
 
         filtered_dict = {}
         sorted_dict = OrderedDict()
@@ -742,6 +829,8 @@ class App(QMainWindow):
         return final_list
 
     def message(self, message_text, message_type="INFO"):
+        """This function displays a message-box with text <message_text> and the message type is controlled by the <message_type>"""
+
         message_text = message_text.title()
 
         matches = list(re.compile(r'\[[A-Za-z]+\]').finditer(message_text))
@@ -769,6 +858,47 @@ class App(QMainWindow):
             return returnValue
 
 
+class CustomLabel(QLabel):
+
+    def __init__(self, parent, signals):
+        """This is the label that is responsible for the drop-get subtitle feature"""
+        super().__init__(parent)
+        _translate = QtCore.QCoreApplication.translate
+        self.setAcceptDrops(True)
+        self.setText(_translate("MainWindow", "<html><head/><body><p align=\"center\"><strong>OR</strong></p><p align=\"center\">DRAG AND DROP THE MOVIE FILE HERE...</p></body></html>"))
+
+        self.signals = signals
+
+    def dragEnterEvent(self, e):
+        if e.mimeData().hasUrls():
+            e.accept()
+        else:
+            e.ignore()
+
+    def dropEvent(self, e):
+        for url in e.mimeData().urls():
+            self.signals.dropped_signal.emit(url)
+
+
+class SubDropWorker(QRunnable):
+
+    def __init__(self, func, url_obj,  *args, **kwargs):
+
+        super(SubDropWorker, self).__init__()
+        self.args = args
+        self.kwargs = kwargs
+        self.signals = WorkerSignals()
+        self.func = func
+        self.url_obj = url_obj
+
+    @pyqtSlot()
+    def run(self):
+
+        # print("geting data...")
+        self.func(self.url_obj, self.signals)
+        # print("done.")
+
+
 class Worker(QRunnable):
 
     def __init__(self, func, *args, **kwargs):
@@ -783,10 +913,9 @@ class Worker(QRunnable):
     @pyqtSlot()
     def run(self):
 
-        print("geting data...")
+        # print("geting data...")
         self.func(self.signals)
-        print("done.")
-
+        # print("done.")
 
 
 class WorkerSignals(QObject):
@@ -794,6 +923,11 @@ class WorkerSignals(QObject):
     finished = pyqtSignal()
     log_data = pyqtSignal(object, object)
     message_signal = pyqtSignal(object)
+
+
+class DropSignals(QObject):
+
+    dropped_signal = pyqtSignal(object)
 
 
 

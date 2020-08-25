@@ -106,4 +106,6 @@ venv.bak/
 
 .idea/
 installers/
+/utils/design_files/MainDesign-Copy.py
+utils/design_files/MainDesign-Copy.ui
 

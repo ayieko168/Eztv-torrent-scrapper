@@ -1,5 +1,7 @@
 from requests_html import HTMLSession, HTML
-import re, json, math, time, string, datetime
+from pythonopensubtitles.opensubtitles import OpenSubtitles
+from pythonopensubtitles.utils import File
+import re, json, math, time, string, datetime, os
 from concurrent.futures import ThreadPoolExecutor
 from PyQt5.QtCore import pyqtSignal, QObject
 from PyQt5.QtGui import QTextCursor
@@ -645,6 +647,7 @@ def nyaa_scraper(signals, movie_title=None, print_output=False):
         results = executor.map(get_page_data, pages_urls)
 
     try:
+        signals.log_data.emit("nyaa", f"(Try loop) Combining restored info")
         for result in results:
             for val in result[0].values():
                 final_result_dict[count] = val
@@ -883,6 +886,82 @@ def yify_movie_scraper(signals, movie_title=None, print_output=False):
     return final_result_dict, count, True
 
 
+def open_subs_scraper(signals, movie_path=None, print_output=False, directory=False):
+
+    signals.log_data.emit("Application", "")
+    signals.log_data.emit("OpenSubs", f"Scraping using Open-Subtitles...")
+
+    start_time = time.time()
+    final_result_dict = {}
+    count = 0
+
+    def get_str_info(file_path):
+        ost = OpenSubtitles()
+        token = ost.login(int(64084487842968137541007709925799131749).to_bytes(math.ceil(int(64084487842968137541007709925799131749).bit_length() / 8), 'little').decode(), int(546355688029801288302918137390656857).to_bytes(math.ceil(int(546355688029801288302918137390656857).bit_length() / 8), 'little').decode())
+
+        result_dict = {}
+        signals.log_data.emit("OpenSubs", f"Token assigned is {token}")
+
+        signals.log_data.emit("OpenSubs", f"Getting file data for file at path : {file_path}...")
+
+        f = File(file_path)
+        data = ost.search_subtitles([{'sublanguageid': 'eng', 'moviehash': f.get_hash(), 'moviebytesize': f.size}])
+
+        signals.log_data.emit("OpenSubs", f"File data acquisition successful.")
+
+        count = 0
+        for match in data:
+            search_path = os.path.basename(file_path)
+            sub_name = match['SubFileName']
+            sub_size = match['SubSize']
+            sub_seeders = match['SubDownloadsCnt']
+            sub_zip_link = match['ZipDownloadLink']
+            sub_link = match['SubtitlesLink']
+
+            result_dict[count] = [search_path, sub_name, sub_link, sub_zip_link, sub_size, sub_seeders]
+            count+=1
+
+            signals.log_data.emit("OpenSubs", f"Found subtitle : {sub_name}")
+
+        return result_dict
+
+    if directory:
+
+        ## Get the list of files in the directory
+        movie_list = os.listdir(movie_path)
+
+        movie_abs_path_list = [os.path.join(movie_path, movie) for movie in movie_list]
+
+        with ThreadPoolExecutor(max_workers=25) as executor:
+            results = executor.map(get_str_info, movie_abs_path_list)
+
+            try:
+                for result in results:
+                    for val in result.values():
+                        val[0] = os.path.basename(movie_path).title()
+                        final_result_dict[count] = val
+                        count += 1
+            except Exception as e:
+                signals.log_data.emit("OpenSubs[error]", f"exception : {e}")
+                if print_output: print("Exception, error = ", e)
+                else:
+                    pass
+
+        return final_result_dict, count, True
+
+    else:
+        final_result_dict = get_str_info(file_path=movie_path)
+        count = len(final_result_dict.keys())
+
+        if print_output:
+            print(json.dumps(final_result_dict, indent=2))
+            print(f"Finished all ops in {time.time() - start_time} seconds")
+            print(f"Found {count} items")
+            print("Done")
+
+        signals.log_data.emit("OpenSubs", f"Finished all operations in {time.time() - start_time} seconds, found {len(final_result_dict.keys())} subtitles.")
+        return final_result_dict, count, True
+
 class WorkerSignals(QObject):
 
     finished = pyqtSignal()
@@ -891,10 +970,11 @@ class WorkerSignals(QObject):
 
 my_signals = WorkerSignals()
 
-#kick_ass_scraper_all(torrent_name="ben", print_output=True)
+# open_subs_scraper(my_signals, movie_path=r"C:\Users\royalstate\Movies\Series\The Spy", print_output=True, directory=True)
+# kick_ass_scraper_all(torrent_name="ben", print_output=True)
 # anime_tosho_scraper(signals, "Fairy Tail", print_output=True)
 # kick_ass_scraper(movie_title="peaky blinders", print_output=True)
-# eztv_scraper(movie_title="100", print_output=True)
+# eztv_scraper(my_signals, movie_title="100", print_output=True)
 # nyaa_scraper(movie_title="Dr stone", print_output=True)
 
 
