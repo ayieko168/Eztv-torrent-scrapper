@@ -49,6 +49,7 @@ In the future I want to:
     - [ ] Tamil Rockers 
     - [x] The Pirate Bay 
     - [x] YIFY
+    - [x] Open Subtiles
     
- - [ ] Ability to scrape for and download subtitles
+ - [x] Ability to scrape for and download subtitles
  - [ ] Ability to get the titles from a rest API (set-up using django-rest-api)
