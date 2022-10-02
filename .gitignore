@@ -105,7 +105,9 @@ venv.bak/
 
 
 .idea/
-installers/
-/utils/design_files/MainDesign-Copy.py
-utils/design_files/MainDesign-Copy.ui
+src/resources/
+src/title_scrapers/
+src/torrent_scrapers/
+
+
 

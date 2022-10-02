@@ -50,5 +50,7 @@ In the future I want to:
     - [x] The Pirate Bay 
     - [x] YIFY
     
- - [ ] Ability to scrape for and download subtitles
- - [ ] Ability to get the titles from a rest API (set-up using django-rest-api)
+- [ ] Ability to scrape for and download subtitles
+  - [ ] Sub Scene
+  - [ ] YTS Subs
+- [ ] Ability to get the titles from a rest API (set-up using django-rest-api)
