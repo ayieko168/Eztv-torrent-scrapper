@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'mainWindowQtcWzY.ui'
+## Form generated from reading UI file 'mainWindowprOoCb.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.3.2
 ##
@@ -11,15 +11,17 @@
 from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
     QMetaObject, QObject, QPoint, QRect,
     QSize, QTime, QUrl, Qt)
-from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
-    QFont, QFontDatabase, QGradient, QIcon,
-    QImage, QKeySequence, QLinearGradient, QPainter,
-    QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFrame,
-    QGroupBox, QHBoxLayout, QHeaderView, QLabel,
-    QLineEdit, QMainWindow, QMenuBar, QPushButton,
-    QSizePolicy, QSpacerItem, QSpinBox, QStackedWidget,
-    QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
+from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
+    QCursor, QFont, QFontDatabase, QGradient,
+    QIcon, QImage, QKeySequence, QLinearGradient,
+    QPainter, QPalette, QPixmap, QRadialGradient,
+    QTransform)
+from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComboBox,
+    QFrame, QGroupBox, QHBoxLayout, QHeaderView,
+    QLabel, QLineEdit, QMainWindow, QMenu,
+    QMenuBar, QPushButton, QSizePolicy, QSpacerItem,
+    QSpinBox, QStackedWidget, QTableWidget, QTableWidgetItem,
+    QTextEdit, QVBoxLayout, QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -27,8 +29,16 @@ class Ui_MainWindow(object):
             MainWindow.setObjectName(u"MainWindow")
         MainWindow.resize(1032, 728)
         icon = QIcon()
-        icon.addFile(u"../imgs/torrent_icon.png", QSize(), QIcon.Normal, QIcon.Off)
+        icon.addFile(u"C:/Users/RoyalState/.designer/imgs/torrent_icon.png", QSize(), QIcon.Normal, QIcon.Off)
         MainWindow.setWindowIcon(icon)
+        self.actionSettings = QAction(MainWindow)
+        self.actionSettings.setObjectName(u"actionSettings")
+        self.actionUpdate = QAction(MainWindow)
+        self.actionUpdate.setObjectName(u"actionUpdate")
+        self.actionReset_All = QAction(MainWindow)
+        self.actionReset_All.setObjectName(u"actionReset_All")
+        self.actionExit = QAction(MainWindow)
+        self.actionExit.setObjectName(u"actionExit")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.verticalLayout = QVBoxLayout(self.centralwidget)
@@ -133,9 +143,9 @@ class Ui_MainWindow(object):
 
         self.start_scraping_button = QPushButton(self.groupBox)
         self.start_scraping_button.setObjectName(u"start_scraping_button")
-        self.start_scraping_button.setMinimumSize(QSize(130, 24))
+        self.start_scraping_button.setMinimumSize(QSize(130, 26))
         icon1 = QIcon()
-        icon1.addFile(u"../imgs/scrape.png", QSize(), QIcon.Normal, QIcon.Off)
+        icon1.addFile(u"C:/Users/RoyalState/.designer/imgs/scrape.png", QSize(), QIcon.Normal, QIcon.Off)
         self.start_scraping_button.setIcon(icon1)
 
         self.horizontalLayout_4.addWidget(self.start_scraping_button)
@@ -145,7 +155,7 @@ class Ui_MainWindow(object):
         self.stop_scraping_button.setMinimumSize(QSize(0, 24))
         self.stop_scraping_button.setMaximumSize(QSize(60, 16777215))
         icon2 = QIcon()
-        icon2.addFile(u"../imgs/stop.png", QSize(), QIcon.Normal, QIcon.Off)
+        icon2.addFile(u"C:/Users/RoyalState/.designer/imgs/stop.png", QSize(), QIcon.Normal, QIcon.Off)
         self.stop_scraping_button.setIcon(icon2)
 
         self.horizontalLayout_4.addWidget(self.stop_scraping_button)
@@ -208,6 +218,7 @@ class Ui_MainWindow(object):
         self.groupBox_3 = QGroupBox(self.groupBox_2)
         self.groupBox_3.setObjectName(u"groupBox_3")
         self.horizontalLayout_11 = QHBoxLayout(self.groupBox_3)
+        self.horizontalLayout_11.setSpacing(10)
         self.horizontalLayout_11.setObjectName(u"horizontalLayout_11")
         self.verticalLayout_5 = QVBoxLayout()
         self.verticalLayout_5.setObjectName(u"verticalLayout_5")
@@ -354,6 +365,9 @@ class Ui_MainWindow(object):
         __qtablewidgetitem3 = QTableWidgetItem()
         self.results_table.setHorizontalHeaderItem(3, __qtablewidgetitem3)
         self.results_table.setObjectName(u"results_table")
+        self.results_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.results_table.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.results_table.setSelectionBehavior(QAbstractItemView.SelectRows)
 
         self.verticalLayout_7.addWidget(self.results_table)
 
@@ -366,6 +380,61 @@ class Ui_MainWindow(object):
         self.stackedWidget.addWidget(self.page)
         self.page_2 = QWidget()
         self.page_2.setObjectName(u"page_2")
+        self.verticalLayout_9 = QVBoxLayout(self.page_2)
+        self.verticalLayout_9.setSpacing(0)
+        self.verticalLayout_9.setObjectName(u"verticalLayout_9")
+        self.verticalLayout_9.setContentsMargins(0, 0, 0, 0)
+        self.frame_2 = QFrame(self.page_2)
+        self.frame_2.setObjectName(u"frame_2")
+        self.frame_2.setFrameShape(QFrame.StyledPanel)
+        self.frame_2.setFrameShadow(QFrame.Raised)
+        self.horizontalLayout_12 = QHBoxLayout(self.frame_2)
+        self.horizontalLayout_12.setObjectName(u"horizontalLayout_12")
+        self.horizontalLayout_12.setContentsMargins(0, -1, 0, -1)
+        self.log_text = QTextEdit(self.frame_2)
+        self.log_text.setObjectName(u"log_text")
+        self.log_text.setFrameShape(QFrame.NoFrame)
+        self.log_text.setFrameShadow(QFrame.Plain)
+        self.log_text.setReadOnly(True)
+
+        self.horizontalLayout_12.addWidget(self.log_text)
+
+        self.verticalLayout_10 = QVBoxLayout()
+        self.verticalLayout_10.setSpacing(12)
+        self.verticalLayout_10.setObjectName(u"verticalLayout_10")
+        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+
+        self.verticalLayout_10.addItem(self.verticalSpacer_2)
+
+        self.back_button = QPushButton(self.frame_2)
+        self.back_button.setObjectName(u"back_button")
+
+        self.verticalLayout_10.addWidget(self.back_button)
+
+        self.clear_button = QPushButton(self.frame_2)
+        self.clear_button.setObjectName(u"clear_button")
+
+        self.verticalLayout_10.addWidget(self.clear_button)
+
+        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Fixed)
+
+        self.verticalLayout_10.addItem(self.verticalSpacer)
+
+        self.auto_scroll = QCheckBox(self.frame_2)
+        self.auto_scroll.setObjectName(u"auto_scroll")
+
+        self.verticalLayout_10.addWidget(self.auto_scroll)
+
+        self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+
+        self.verticalLayout_10.addItem(self.verticalSpacer_3)
+
+
+        self.horizontalLayout_12.addLayout(self.verticalLayout_10)
+
+
+        self.verticalLayout_9.addWidget(self.frame_2)
+
         self.stackedWidget.addWidget(self.page_2)
 
         self.verticalLayout_3.addWidget(self.stackedWidget)
@@ -377,7 +446,17 @@ class Ui_MainWindow(object):
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
         self.menubar.setGeometry(QRect(0, 0, 1032, 22))
+        self.menuOptions = QMenu(self.menubar)
+        self.menuOptions.setObjectName(u"menuOptions")
         MainWindow.setMenuBar(self.menubar)
+
+        self.menubar.addAction(self.menuOptions.menuAction())
+        self.menuOptions.addAction(self.actionSettings)
+        self.menuOptions.addSeparator()
+        self.menuOptions.addAction(self.actionUpdate)
+        self.menuOptions.addAction(self.actionReset_All)
+        self.menuOptions.addSeparator()
+        self.menuOptions.addAction(self.actionExit)
 
         self.retranslateUi(MainWindow)
         self.season_check.toggled.connect(self.season_spin.setEnabled)
@@ -393,6 +472,10 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"EZTV Torrent Scraper - Find Any Torrent!", None))
+        self.actionSettings.setText(QCoreApplication.translate("MainWindow", u"Settings", None))
+        self.actionUpdate.setText(QCoreApplication.translate("MainWindow", u"Update", None))
+        self.actionReset_All.setText(QCoreApplication.translate("MainWindow", u"Reset All", None))
+        self.actionExit.setText(QCoreApplication.translate("MainWindow", u"Exit", None))
         self.groupBox.setTitle(QCoreApplication.translate("MainWindow", u"Srape For Movie/Show/Subtitle/Socce-Streams/Anime Data", None))
 #if QT_CONFIG(tooltip)
         self.keyword_edit.setToolTip(QCoreApplication.translate("MainWindow", u"Enter the keyword you want to search/scrape for.\n"
@@ -401,7 +484,7 @@ class Ui_MainWindow(object):
 "then later filter the Sraped data for what you want exactly.", None))
 #endif // QT_CONFIG(tooltip)
         self.keyword_edit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Keyword... Example: Game Of Thrones", None))
-        self.label_6.setText(QCoreApplication.translate("MainWindow", u"HINT: Only search ONCE then use the filter option to filter what to download or use. Hover over buttons to get help.", None))
+        self.label_6.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>HINT: Only search <span style=\" font-weight:700;\">ONCE</span> then use the filter option to filter what to download or use. Hover over buttons to get help.</p></body></html>", None))
         self.label.setText(QCoreApplication.translate("MainWindow", u"Scrape For : ", None))
         self.scrape_for_combo.setItemText(0, QCoreApplication.translate("MainWindow", u"Tv-Shows", None))
         self.scrape_for_combo.setItemText(1, QCoreApplication.translate("MainWindow", u"Movies", None))
@@ -433,7 +516,7 @@ class Ui_MainWindow(object):
         self.stop_scraping_button.setText(QCoreApplication.translate("MainWindow", u"Stop", None))
         self.groupBox_2.setTitle(QCoreApplication.translate("MainWindow", u"Filter The Data You Have Scraped", None))
         self.label_3.setText(QCoreApplication.translate("MainWindow", u"Current Database : ", None))
-        self.currnet_database_label.setText(QCoreApplication.translate("MainWindow", u"Game Of Thones", None))
+        self.currnet_database_label.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-size:11pt; font-weight:700; color:#313131;\">Game Of Thones</span></p></body></html>", None))
 #if QT_CONFIG(tooltip)
         self.more_information_button.setToolTip(QCoreApplication.translate("MainWindow", u"This button will try to get more details of the KEYWORD and display it in your browser.", None))
 #endif // QT_CONFIG(tooltip)
@@ -478,5 +561,9 @@ class Ui_MainWindow(object):
         ___qtablewidgetitem2.setText(QCoreApplication.translate("MainWindow", u"Seeders", None));
         ___qtablewidgetitem3 = self.results_table.horizontalHeaderItem(3)
         ___qtablewidgetitem3.setText(QCoreApplication.translate("MainWindow", u"Magnet Link", None));
+        self.back_button.setText(QCoreApplication.translate("MainWindow", u"Back", None))
+        self.clear_button.setText(QCoreApplication.translate("MainWindow", u"Clear", None))
+        self.auto_scroll.setText(QCoreApplication.translate("MainWindow", u"Auto Scroll", None))
+        self.menuOptions.setTitle(QCoreApplication.translate("MainWindow", u"Options", None))
     # retranslateUi
 

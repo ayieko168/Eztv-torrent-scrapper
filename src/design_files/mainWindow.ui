@@ -15,7 +15,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>../imgs/torrent_icon.png</normaloff>../imgs/torrent_icon.png</iconset>
+    <normaloff>C:/Users/RoyalState/.designer/imgs/torrent_icon.png</normaloff>C:/Users/RoyalState/.designer/imgs/torrent_icon.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -119,7 +119,7 @@ then later filter the Sraped data for what you want exactly.</string>
           <item>
            <widget class="QLabel" name="label_6">
             <property name="text">
-             <string>HINT: Only search ONCE then use the filter option to filter what to download or use. Hover over buttons to get help.</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;HINT: Only search &lt;span style=&quot; font-weight:700;&quot;&gt;ONCE&lt;/span&gt; then use the filter option to filter what to download or use. Hover over buttons to get help.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
@@ -248,7 +248,7 @@ want to scrape the data from.</string>
               <property name="minimumSize">
                <size>
                 <width>130</width>
-                <height>24</height>
+                <height>26</height>
                </size>
               </property>
               <property name="toolTip">
@@ -260,7 +260,7 @@ the Keyword in the selected site and return the found data.</string>
               </property>
               <property name="icon">
                <iconset>
-                <normaloff>../imgs/scrape.png</normaloff>../imgs/scrape.png</iconset>
+                <normaloff>C:/Users/RoyalState/.designer/imgs/scrape.png</normaloff>C:/Users/RoyalState/.designer/imgs/scrape.png</iconset>
               </property>
               <property name="default">
                <bool>true</bool>
@@ -289,7 +289,7 @@ the Keyword in the selected site and return the found data.</string>
               </property>
               <property name="icon">
                <iconset>
-                <normaloff>../imgs/stop.png</normaloff>../imgs/stop.png</iconset>
+                <normaloff>C:/Users/RoyalState/.designer/imgs/stop.png</normaloff>C:/Users/RoyalState/.designer/imgs/stop.png</iconset>
               </property>
              </widget>
             </item>
@@ -353,7 +353,7 @@ the Keyword in the selected site and return the found data.</string>
                   <item>
                    <widget class="QLabel" name="currnet_database_label">
                     <property name="text">
-                     <string>Game Of Thones</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:11pt; font-weight:700; color:#313131;&quot;&gt;Game Of Thones&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                    </widget>
                   </item>
@@ -390,6 +390,9 @@ the Keyword in the selected site and return the found data.</string>
                  <string>Filter Options: </string>
                 </property>
                 <layout class="QHBoxLayout" name="horizontalLayout_11">
+                 <property name="spacing">
+                  <number>10</number>
+                 </property>
                  <item>
                   <layout class="QVBoxLayout" name="verticalLayout_5">
                    <item>
@@ -606,6 +609,15 @@ This can be done more than once.</string>
                 <layout class="QVBoxLayout" name="verticalLayout_7">
                  <item>
                   <widget class="QTableWidget" name="results_table">
+                   <property name="editTriggers">
+                    <set>QAbstractItemView::NoEditTriggers</set>
+                   </property>
+                   <property name="selectionMode">
+                    <enum>QAbstractItemView::SingleSelection</enum>
+                   </property>
+                   <property name="selectionBehavior">
+                    <enum>QAbstractItemView::SelectRows</enum>
+                   </property>
                    <column>
                     <property name="text">
                      <string>Torrent Name</string>
@@ -636,7 +648,126 @@ This can be done more than once.</string>
            </item>
           </layout>
          </widget>
-         <widget class="QWidget" name="page_2"/>
+         <widget class="QWidget" name="page_2">
+          <layout class="QVBoxLayout" name="verticalLayout_9">
+           <property name="spacing">
+            <number>0</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QFrame" name="frame_2">
+             <property name="frameShape">
+              <enum>QFrame::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Raised</enum>
+             </property>
+             <layout class="QHBoxLayout" name="horizontalLayout_12">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QTextEdit" name="log_text">
+                <property name="frameShape">
+                 <enum>QFrame::NoFrame</enum>
+                </property>
+                <property name="frameShadow">
+                 <enum>QFrame::Plain</enum>
+                </property>
+                <property name="readOnly">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_10">
+                <property name="spacing">
+                 <number>12</number>
+                </property>
+                <item>
+                 <spacer name="verticalSpacer_2">
+                  <property name="orientation">
+                   <enum>Qt::Vertical</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>20</width>
+                    <height>40</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="back_button">
+                  <property name="text">
+                   <string>Back</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="clear_button">
+                  <property name="text">
+                   <string>Clear</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="verticalSpacer">
+                  <property name="orientation">
+                   <enum>Qt::Vertical</enum>
+                  </property>
+                  <property name="sizeType">
+                   <enum>QSizePolicy::Fixed</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>20</width>
+                    <height>40</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="auto_scroll">
+                  <property name="text">
+                   <string>Auto Scroll</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="verticalSpacer_3">
+                  <property name="orientation">
+                   <enum>Qt::Vertical</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>20</width>
+                    <height>40</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+           </item>
+          </layout>
+         </widget>
         </widget>
        </item>
       </layout>
@@ -653,7 +784,39 @@ This can be done more than once.</string>
      <height>22</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuOptions">
+    <property name="title">
+     <string>Options</string>
+    </property>
+    <addaction name="actionSettings"/>
+    <addaction name="separator"/>
+    <addaction name="actionUpdate"/>
+    <addaction name="actionReset_All"/>
+    <addaction name="separator"/>
+    <addaction name="actionExit"/>
+   </widget>
+   <addaction name="menuOptions"/>
   </widget>
+  <action name="actionSettings">
+   <property name="text">
+    <string>Settings</string>
+   </property>
+  </action>
+  <action name="actionUpdate">
+   <property name="text">
+    <string>Update</string>
+   </property>
+  </action>
+  <action name="actionReset_All">
+   <property name="text">
+    <string>Reset All</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>Exit</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections>

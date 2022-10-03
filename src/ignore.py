@@ -1,7 +1,8 @@
 import math
+from datetime import datetime
 
 a = 44864
 b = 50
 
 
-print(5 * round(878 / 5))
+print(datetime.time(datetime.now()))
