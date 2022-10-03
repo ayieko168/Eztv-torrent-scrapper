@@ -6,9 +6,10 @@ import requests
 import math
 
 file_name = "yifi_movie_titles.json"
+failed_path = "failed_yify.txt"
 base_url = "https://yts.mx/api/v2/list_movies.json"
-main_show_list = []
-MAX_WORKERS = 50
+main_shows_dict = {}
+MAX_WORKERS = 20
 LIMIT = 50   # The limit number of results per query, default is 20 &limit=50
 
 start_time = time()
@@ -29,6 +30,8 @@ pages_count = 5 * round(pages_count_o / 5)
 
 print(f"Visiting {pages_count} pages with each having {limit} movies each. MOVIE_COUNT = {movie_count}, ORIGINAL_PAGES = {pages_count_o}")
 
+## Format the failed list
+with open(failed_path, 'w') as fo: fo.write('')
 
 def get_page_show_details(url):
     try:
@@ -40,15 +43,17 @@ def get_page_show_details(url):
             return
 
         ## Get out the show data
+        movie_dict = {}
         for movie in json_data['data']['movies']:
-            movie_dict = {}
             movie_dict[movie['title_english']] = movie['imdb_code']
-            main_show_list.append(movie_dict)
+
+        main_shows_dict.update(movie_dict)
 
         print(f"Done scraping url {url}")
 
     except Exception as e:
         print(f'Failed to start the scrape_torrent_info session, URL: {url}, Exception: {e}')
+        with open(failed_path, 'a') as fo: fo.write(f"{url}\n")
 
 
 ## Create a list of urls to visit
@@ -67,7 +72,8 @@ with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
 ## Save the data to disk
 print(f"Saving the data to disk..")
 with open(file_name, 'w') as fo:
-    json.dump(main_show_list, fo, indent=2, sort_keys=True)
+    json.dump(main_shows_dict, fo, indent=2, sort_keys=True)
 
 print(f"Finished all operations in {time() - start_time} seconds")
-print(f"Found {len(main_show_list)} shows.")
+print(f"Found {len(main_shows_dict.keys())} shows.")
+

@@ -7,11 +7,15 @@ import requests
 # page_no = 260
 last_page = 260
 file_name = "tvmaze_show_titles.json"
+failed_path = "failed_tv.txt"
 base_url = "https://api.tvmaze.com/shows"
-main_show_list = []
+main_shows_dict = {}
 MAX_WORKERS = 10
 
 start_time = time()
+
+## Format the failed list
+with open(failed_path, 'w') as fo: fo.write('')
 
 
 def get_page_show_details(url):
@@ -21,18 +25,21 @@ def get_page_show_details(url):
 
         if not json_data:
             print(f"[NO DATA ERROR] No data found for {url}")
+            with open(failed_path, 'a') as fo: fo.write(f"{url}\n")
             return
 
         ## Get out the show data
+        shows_dict = {}
         for show in json_data:
-            shows_dict = {}
             shows_dict[show['name']] = show['externals']['imdb']
-            main_show_list.append(shows_dict)
+
+        main_shows_dict.update(shows_dict)
 
         print(f"Done scraping url {url}")
 
     except Exception as e:
         print(f'Failed to start the scrape_torrent_info session, URL: {url}, Exception: {e}')
+        with open(failed_path, 'a') as fo: fo.write(f"{url}\n")
 
 
 ## Create a list of urls to visit
@@ -47,10 +54,10 @@ with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
 
 ## Save the data to disk
 with open(file_name, 'w') as fo:
-    json.dump(main_show_list, fo, indent=2, sort_keys=True)
+    json.dump(main_shows_dict, fo, indent=2, sort_keys=True)
 
 print(f"\nFinished all operations in {time() - start_time} seconds")
-print(f"Found {len(main_show_list)} shows.")
+print(f"Found {len(main_shows_dict.keys())} shows.")
 
 
 

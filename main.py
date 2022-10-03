@@ -36,6 +36,7 @@ class MainApp(QMainWindow):
         ## Variables
         self.settings = {}
         self.movie_titles = []
+        self.show_titles = []
 
         ## Setup functions
         self.setup_ui()
@@ -58,16 +59,10 @@ class MainApp(QMainWindow):
         with open(resource_path("src/settings.json"), "r") as fo: self.settings = json.load(fo)
 
         ## Load the movie titles
-        with open(resource_path("src/title_scrapers/yifi_movie_titles.json"), "r") as fo: self.movie_titles = list(set(json.load(fo).keys()))
-        for title in self.movie_titles:
-            if title.split():
-                if title.split()[0].startswith('['):
-                    self.movie_titles.remove(title)
-                    new_title = ' '.join(title.split()[1:])
-                    self.movie_titles.append(new_title)
-        self.movie_titles = list(set(self.movie_titles))
-
-        movie_completer = QCompleter(self.movie_titles, self)
+        with open(resource_path("src/title_scrapers/yifi_movie_titles.json"), "r") as fo: self.movie_titles = list(json.load(fo).keys())
+        with open(resource_path("src/title_scrapers/tvmaze_show_titles.json"), 'r') as fo: self.show_titles = list(json.load(fo).keys())
+        suggestions_list = self.movie_titles + self.show_titles
+        movie_completer = QCompleter(suggestions_list, self)
         movie_completer.setCaseSensitivity(Qt.CaseInsensitive)
         self.ui.keyword_edit.setCompleter(movie_completer)
         print(self.movie_titles)
