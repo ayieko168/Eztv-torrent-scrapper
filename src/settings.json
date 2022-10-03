@@ -1,8 +1,36 @@
 {
   "keywordFocus": true,
   "tv-scrapers": {
-    "EZTV": "",
+    "EZTV": "https://eztv.re/",
     "Kickass": "",
     "The Pirate Bay": ""
+  },
+  "movie-scrapers": {
+    "YIFI (YTS)": "",
+    "Kickass": "",
+    "The Pirate Bay": ""
+  },
+  "subtitle-scrapers": {
+    "Open Subs": "",
+    "YIFI Subs": "",
+    "Sub-Scene": ""
+  },
+  "soccer-scrapers": {
+    "Reddit Soccer": "",
+    "Sports Online": "",
+    "Elixx": "",
+    "Hes Goal": "",
+    "XE-Streams": ""
+  },
+  "anime-scrapers": {
+    "Nyaa": "",
+    "Anime Tosho": "",
+    "Kickass": ""
+  },
+  "general-scrapers": {
+    "Kickass": "",
+    "The Pirate Bay": "",
+    "Torrent Galaxy": "",
+    "1337X": ""
   }
 }

@@ -106,7 +106,7 @@ venv.bak/
 
 .idea/
 src/resources/
-src/title_scrapers/
+src/title_scrapers/tmp/
 src/torrent_scrapers/
 
 

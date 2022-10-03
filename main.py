@@ -35,6 +35,7 @@ class MainApp(QMainWindow):
 
         ## Variables
         self.settings = {}
+        self.movie_titles = []
 
         ## Setup functions
         self.setup_ui()
@@ -56,6 +57,21 @@ class MainApp(QMainWindow):
         ## Load the settings
         with open(resource_path("src/settings.json"), "r") as fo: self.settings = json.load(fo)
 
+        ## Load the movie titles
+        with open(resource_path("src/title_scrapers/yifi_movie_titles.json"), "r") as fo: self.movie_titles = list(set(json.load(fo).keys()))
+        for title in self.movie_titles:
+            if title.split():
+                if title.split()[0].startswith('['):
+                    self.movie_titles.remove(title)
+                    new_title = ' '.join(title.split()[1:])
+                    self.movie_titles.append(new_title)
+        self.movie_titles = list(set(self.movie_titles))
+
+        movie_completer = QCompleter(self.movie_titles, self)
+        movie_completer.setCaseSensitivity(Qt.CaseInsensitive)
+        self.ui.keyword_edit.setCompleter(movie_completer)
+        print(self.movie_titles)
+
     def initial_ui_setup(self):
 
         ## Verify root path
@@ -72,6 +88,14 @@ class MainApp(QMainWindow):
         self.ui.season_spin.setValue(1)
         self.ui.episode_spin.setValue(1)
 
+        ## Set the scraper combo values
+        scrapers = list(dict(self.settings['tv-scrapers']).keys()) + ["All Sites"]
+        self.ui.scrape_from_combo.setCurrentIndex(0)
+        self.ui.scrape_from_combo.clear()
+        self.ui.scrape_from_combo.addItems(scrapers)
+
+        ## Set up the
+
     def setup_ui_connections(self):
 
         self.ui.scrape_for_combo.currentIndexChanged.connect(self.change_scrapers_in_combo)
@@ -81,12 +105,39 @@ class MainApp(QMainWindow):
 
         if self.ui.scrape_for_combo.currentText().lower() == "Tv-Shows".lower():
             log("[APPLICATION] Changed to the scrape for option to TV-Show")
-            tv_scrapers = list(dict(self.settings['tv-scrapers']).keys())
-            print(tv_scrapers)
-            return
-            self.ui.scraperCombo.clear()
-            self.ui.scraperCombo.addItems(tv_scrapers)
-            self.ui.titleEdit.setPlaceholderText("Enter Tv-Show Title")
+            scrapers = list(dict(self.settings['tv-scrapers']).keys()) + ["All Sites"]
+            self.ui.scrape_from_combo.clear()
+            self.ui.scrape_from_combo.addItems(scrapers)
+
+        elif self.ui.scrape_for_combo.currentText().lower() == "Movies".lower():
+            log("[APPLICATION] Changed to the scrape for option to Movies")
+            scrapers = list(dict(self.settings['movie-scrapers']).keys()) + ["All Sites"]
+            self.ui.scrape_from_combo.clear()
+            self.ui.scrape_from_combo.addItems(scrapers)
+
+        elif self.ui.scrape_for_combo.currentText().lower() == "Subtitles".lower():
+            log("[APPLICATION] Changed to the scrape for option to Subtitles")
+            scrapers = list(dict(self.settings['subtitle-scrapers']).keys()) + ["All Sites"]
+            self.ui.scrape_from_combo.clear()
+            self.ui.scrape_from_combo.addItems(scrapers)
+
+        elif self.ui.scrape_for_combo.currentText().lower() == "Soccer-Streams".lower():
+            log("[APPLICATION] Changed to the scrape for option to Soccer-Streams")
+            scrapers = list(dict(self.settings['soccer-scrapers']).keys()) + ["All Sites"]
+            self.ui.scrape_from_combo.clear()
+            self.ui.scrape_from_combo.addItems(scrapers)
+
+        elif self.ui.scrape_for_combo.currentText().lower() == "Anime".lower():
+            log("[APPLICATION] Changed to the scrape for option to Anime")
+            scrapers = list(dict(self.settings['anime-scrapers']).keys()) + ["All Sites"]
+            self.ui.scrape_from_combo.clear()
+            self.ui.scrape_from_combo.addItems(scrapers)
+
+        elif self.ui.scrape_for_combo.currentText().lower() == "General".lower():
+            log("[APPLICATION] Changed to the scrape for option to General")
+            scrapers = list(dict(self.settings['general-scrapers']).keys()) + ["All Sites"]
+            self.ui.scrape_from_combo.clear()
+            self.ui.scrape_from_combo.addItems(scrapers)
 
 
 
