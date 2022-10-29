@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'mainWindowprOoCb.ui'
+## Form generated from reading UI file 'mainWindowpfAKOO.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.3.2
 ##
@@ -197,6 +197,8 @@ class Ui_MainWindow(object):
 
         self.currnet_database_label = QLabel(self.groupBox_2)
         self.currnet_database_label.setObjectName(u"currnet_database_label")
+        self.currnet_database_label.setStyleSheet(u"font: 700 11pt \"Century Gothic\";\n"
+"color: rgb(49, 49, 49);")
 
         self.horizontalLayout_5.addWidget(self.currnet_database_label)
 
@@ -516,7 +518,7 @@ class Ui_MainWindow(object):
         self.stop_scraping_button.setText(QCoreApplication.translate("MainWindow", u"Stop", None))
         self.groupBox_2.setTitle(QCoreApplication.translate("MainWindow", u"Filter The Data You Have Scraped", None))
         self.label_3.setText(QCoreApplication.translate("MainWindow", u"Current Database : ", None))
-        self.currnet_database_label.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-size:11pt; font-weight:700; color:#313131;\">Game Of Thones</span></p></body></html>", None))
+        self.currnet_database_label.setText(QCoreApplication.translate("MainWindow", u"Game Of Thrones", None))
 #if QT_CONFIG(tooltip)
         self.more_information_button.setToolTip(QCoreApplication.translate("MainWindow", u"This button will try to get more details of the KEYWORD and display it in your browser.", None))
 #endif // QT_CONFIG(tooltip)

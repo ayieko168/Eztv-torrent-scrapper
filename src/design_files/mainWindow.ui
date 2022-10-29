@@ -352,8 +352,12 @@ the Keyword in the selected site and return the found data.</string>
                   </item>
                   <item>
                    <widget class="QLabel" name="currnet_database_label">
+                    <property name="styleSheet">
+                     <string notr="true">font: 700 11pt &quot;Century Gothic&quot;;
+color: rgb(49, 49, 49);</string>
+                    </property>
                     <property name="text">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:11pt; font-weight:700; color:#313131;&quot;&gt;Game Of Thones&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     <string>Game Of Thrones</string>
                     </property>
                    </widget>
                   </item>

@@ -28,6 +28,11 @@ def put_toast(parent, message, duration=2):
     QToaster.showMessage(parent, message, timeout=duration, corner=Qt.BottomRightCorner)
 
 
+def sort_filter(data, sort_by='title', filter_by=None):
+
+    return data
+
+
 class QToaster(QtWidgets.QFrame):
 
     closed = QtCore.Signal()

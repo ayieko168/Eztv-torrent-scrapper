@@ -40,11 +40,11 @@ class MainApp(QMainWindow):
         self.threadpool = QThreadPool()
 
         ## Setup functions
-        self.setup_ui()
+        self.initial_setup()
         self.initial_ui_setup()
         self.setup_ui_connections()
 
-    def setup_ui(self):
+    def initial_setup(self):
 
         ## Setup the icons
         icon = QIcon()
@@ -73,6 +73,14 @@ class MainApp(QMainWindow):
         ## Load all the locally available movie and show titles
         with open(resource_path("src/title_scrapers/yifi_movie_titles.json"), "r") as fo: self.movies_and_shows.update(json.load(fo))
         with open(resource_path("src/title_scrapers/tvmaze_show_titles.json"), 'r') as fo: self.movies_and_shows.update(json.load(fo))
+
+        ## Load the previous data to table
+        with open(resource_path("src/results.json"), "r") as fo: previous_movie_data = json.load(fo)
+        self.tabulate_data(previous_movie_data)
+
+        ## Load the title from previous result
+        self.ui.currnet_database_label.setText(self.settings['previous_title'])
+        self.ui.more_information_button.setText(f"More Information on {self.settings['previous_title']}")
 
     def initial_ui_setup(self):
 
@@ -108,6 +116,12 @@ class MainApp(QMainWindow):
 
         ## Setup the default auto scroll state
         self.ui.auto_scroll.setChecked(True)
+
+        ## Setup table column resize policy
+        header = self.ui.results_table.horizontalHeader()
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
 
     def setup_ui_connections(self):
 
@@ -201,6 +215,18 @@ class MainApp(QMainWindow):
         else:
             self.ui.log_text.insertPlainText(log_text)
 
+    def update_current_database_title(self, title: str):
+
+        self.settings['previous_title'] = title
+
+        with open(os.path.join(ROOT_DIR, "src/settings.json"), "w") as fo:
+            json.dump(self.settings, fo, indent=2)
+
+        self.ui.currnet_database_label.setText(self.settings['previous_title'])
+        self.ui.more_information_button.setText(f"More Information on {self.settings['previous_title']}")
+
+
+
     def tabulate_data(self, data: list):
 
         ## Clear the table
@@ -208,7 +234,7 @@ class MainApp(QMainWindow):
 
         for item in data:
 
-            ## poulate the data
+            ## populate the data
             table = self.ui.results_table
             rowPosition = table.rowCount()
             table.insertRow(rowPosition)
@@ -218,6 +244,13 @@ class MainApp(QMainWindow):
             table.setItem(rowPosition, 1, QTableWidgetItem(str(item['size_bytes'])))  # Size
             table.setItem(rowPosition, 2, QTableWidgetItem(str(item['seeds'])))  # Seeds
             table.setItem(rowPosition, 3, QTableWidgetItem(str(item['magnet_url'])))  # Magnet link
+
+        self.ui.start_scraping_button.setEnabled(True)
+
+    def finished_scraping(self):
+
+        self.ui.show_status_check.toggle()
+        self.ui.start_scraping_button.setEnabled(True)
 
     def start_scraping_operation(self):
 
@@ -236,18 +269,40 @@ class MainApp(QMainWindow):
                 ## Move the page
                 self.ui.show_status_check.toggle()
 
+                ## Disable the widgets
+                self.ui.start_scraping_button.setEnabled(False)
+
                 ## Start the search queue
-                worker = SigWorker(lambda sigs: self.eztv_scraper.get_show_by_imdb_id(search_imdb_id, sigs))
+                worker = SigWorker(lambda sigs: self.eztv_scraper.get_show_by_imdb_id(search_imdb_id, sigs, search_keyword))
                 worker.signals.message_signal.connect(put_toast)
                 worker.signals.log_data.connect(self.log_to_widget)
-                worker.signals.finished.connect(self.ui.show_status_check.toggle)
-                worker.signals.finished_tabulate.connect(lambda table_data: self.tabulate_data(table_data))
+                worker.signals.finished.connect(self.finished_scraping)
+                worker.signals.finished_tabulate.connect(lambda table_data: self.tabulate_data(sort_filter(table_data)))
+                worker.signals.finished_tabulate.connect(lambda: self.update_current_database_title(search_keyword.title()))
+
+                ## Start thread
+                self.threadpool.start(worker)
+
+            else:
+
+                ## Move the page
+                self.ui.show_status_check.toggle()
 
                 ## Disable the widgets
                 self.ui.start_scraping_button.setEnabled(False)
 
+                ## Start the search queue
+                worker = SigWorker(lambda sigs: self.eztv_scraper.get_show_by_name(search_keyword, sigs))
+                worker.signals.message_signal.connect(put_toast)
+                worker.signals.log_data.connect(self.log_to_widget)
+                worker.signals.finished.connect(self.finished_scraping)
+                worker.signals.finished_tabulate.connect(lambda table_data: self.tabulate_data(sort_filter(table_data)))
+                worker.signals.finished_tabulate.connect(lambda: self.update_current_database_title(search_keyword.title()))
+
+
                 ## Start thread
                 self.threadpool.start(worker)
+
 
 
 
