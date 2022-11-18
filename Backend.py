@@ -562,12 +562,12 @@ class App(QMainWindow):
             for found_torrent_list in query_dict:
                 self.displayResultOnTable(found_torrent_list, on_table=table)
 
-        w.processEvents()
+        #w.processEvents()
 
     def double_click_handler(self):
         """Handler for double clicks on the result tables"""
 
-        w.processEvents()
+        #w.processEvents()
         table = QApplication.focusWidget()
 
         def getItemData(itemIndex):
@@ -594,7 +594,7 @@ class App(QMainWindow):
     @pyqtSlot(QPoint)
     def on_customContextMenuRequested(self, pos):
 
-        w.processEvents()
+        #w.processEvents()
         table = QApplication.focusWidget()
         tableName = table.objectName()
 
