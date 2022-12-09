@@ -1,7 +1,7 @@
 appdirs==1.4.4
 beautifulsoup4==4.11.1
 bs4==0.0.1
-certifi==2022.9.24
+certifi==2022.12.7
 charset-normalizer==2.1.1
 colorama==0.4.5
 cssselect==1.1.0
